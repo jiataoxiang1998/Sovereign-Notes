@@ -75,57 +75,70 @@
                 </button>
             </div>
             <div class="space-y-3">
-              <div v-for="(item, index) in data.todos" :key="item.id" draggable="true" @dragstart="onDragStart('todos', item)" @dragover.prevent="onDragOver('todos', index)" @drop="onDrop('todos', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'todos' && dragOverIndex?.index === index}" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer">
-                <div class="flex items-center gap-4">
-                  <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
-                    <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
+              <div v-for="cat in todoCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-hidden">
+                <div @click="toggleCategoryCollapse(cat.id)" class="flex items-center justify-between p-3 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#f2ca50]">
+                      {{ collapsedCategories.has(cat.id) ? 'chevron_right' : 'expand_more' }}
+                    </span>
+                    <span class="text-[#e5e2e1] font-medium">{{ cat.name }}</span>
+                    <span class="text-xs text-[#99907c]">({{ cat.items.length }})</span>
                   </div>
-                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
-                  <button
-                    @click.stop="!isReadOnly && togglePriority(item)"
-                    :disabled="isReadOnly"
-                    class="text-xs px-2 py-0.5 rounded transition-all"
-                    :class="[
-                      isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
-                      item.priority === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
-                      item.priority === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
-                      item.priority === 'low' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
-                      'bg-[#99907c]/10 text-[#99907c]'
-                    ]"
-                  >{{ !item.priority ? '+' : item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</button>
-                  <div class="relative">
-                    <button v-if="item.dueDate" @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#f2ca50]/20 text-[#f2ca50] flex items-center gap-1 hover:bg-[#f2ca50]/30">
-                      <span class="material-symbols-outlined text-[10px]">schedule</span>
-                      {{ item.dueDate }}
-                    </button>
-                    <button v-else @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
-                      <span class="material-symbols-outlined text-[10px]">schedule</span>
-                    </button>
-                    <div v-if="dueDatePickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[180px]" @click.stop>
-                      <div class="flex justify-between items-center mb-2">
-                        <button @click.stop="changePickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
-                        <span class="text-xs text-[#f2ca50]">{{ pickerYear }}年{{ pickerMonth }}月</span>
-                        <button @click.stop="changePickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+                  <button @click.stop="openAddModalWithCategory('todos', cat.id)" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50] text-sm">add</button>
+                </div>
+                <div v-show="!collapsedCategories.has(cat.id)" class="border-t border-[#99907c]/10">
+                  <div v-for="(item, index) in cat.items" :key="item.id" draggable="true" @dragstart="onDragStart('todos', item)" @dragover.prevent="onDragOver('todos', index)" @drop="onDrop('todos', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'todos' && dragOverIndex?.index === index}" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer border-b border-[#99907c]/5 last:border-b-0">
+                    <div class="flex items-center gap-4">
+                      <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
                       </div>
-                      <div class="grid grid-cols-7 gap-1 mb-1">
-                        <span v-for="w in ['日','一','二','三','四','五','六']" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                      <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                      <button
+                        @click.stop="!isReadOnly && togglePriority(item)"
+                        :disabled="isReadOnly"
+                        class="text-xs px-2 py-0.5 rounded transition-all"
+                        :class="[
+                          isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                          item.priority === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                          item.priority === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                          item.priority === 'low' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                          'bg-[#99907c]/10 text-[#99907c]'
+                        ]"
+                      >{{ !item.priority ? '+' : item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</button>
+                      <div class="relative">
+                        <button v-if="item.dueDate" @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#f2ca50]/20 text-[#f2ca50] flex items-center gap-1 hover:bg-[#f2ca50]/30">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                          {{ item.dueDate }}
+                        </button>
+                        <button v-else @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                        </button>
+                        <div v-if="dueDatePickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[180px]" @click.stop>
+                          <div class="flex justify-between items-center mb-2">
+                            <button @click.stop="changePickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                            <span class="text-xs text-[#f2ca50]">{{ pickerYear }}年{{ pickerMonth }}月</span>
+                            <button @click.stop="changePickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+                          </div>
+                          <div class="grid grid-cols-7 gap-1 mb-1">
+                            <span v-for="w in ['日','一','二','三','四','五','六']" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                          </div>
+                          <div class="grid grid-cols-7 gap-1">
+                            <button v-for="d in pickerDays" :key="d.date" @click.stop="!isReadOnly && confirmDueDate(item, d.date)" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+                          </div>
+                          <button @click.stop="!isReadOnly && (delete item.dueDate, saveData(), dueDatePickerId = null)" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">清除</button>
+                          <button @click.stop="dueDatePickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">关闭</button>
+                        </div>
                       </div>
-                      <div class="grid grid-cols-7 gap-1">
-                        <button v-for="d in pickerDays" :key="d.date" @click.stop="!isReadOnly && confirmDueDate(item, d.date)" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
-                      </div>
-                      <button @click.stop="!isReadOnly && (delete item.dueDate, saveData(), dueDatePickerId = null)" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">清除</button>
-                      <button @click.stop="dueDatePickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">关闭</button>
                     </div>
+                    <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                      delete
+                    </button>
                   </div>
                 </div>
-                <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
-                  delete
-                </button>
               </div>
-              <div v-if="!data.todos.length" class="border-2 border-dashed border-[#99907c]/20 rounded-lg p-6 flex flex-col items-center justify-center text-[#d0c5af]/40 mt-4">
-                <span class="material-symbols-outlined text-4xl mb-2">note_add</span>
-                <p class="text-xs">Add more tasks to your workflow</p>
-              </div>
+              <button v-if="!isReadOnly" @click="openAddModal('todos')" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#f2ca50] hover:text-[#f2ca50] transition">
+                + 添加待办
+              </button>
             </div>
           </section>
 
@@ -139,15 +152,32 @@
               <span class="text-[10px] bg-[#f2ca50]/10 text-[#f2ca50] px-2 py-1 rounded font-bold">{{ data.completed.length }} TODAY</span>
             </div>
             <div class="space-y-2 overflow-y-auto max-h-[300px] pr-2">
-              <div v-for="(item, index) in data.completed" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
-                <button @click="!isReadOnly && moveToTodo(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="material-symbols-outlined text-[#f2ca50] text-sm hover:text-[#4ade80] transition-all">check_circle</button>
-                <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
-                <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
-                <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
-                  delete
-                </button>
+              <div v-for="cat in completedCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-hidden">
+                <div @click="toggleCategoryCollapse('completed-' + cat.id)" class="flex items-center justify-between p-2 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#f2ca50]">
+                      {{ collapsedCategories.has('completed-' + cat.id) ? 'chevron_right' : 'expand_more' }}
+                    </span>
+                    <span class="text-[#e5e2e1] font-medium text-sm">{{ cat.name }}</span>
+                    <span class="text-xs text-[#99907c]">({{ cat.items.length }})</span>
+                  </div>
+                  <button @click.stop="openAddModalWithCategory('completed', cat.id)" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50] text-sm">add</button>
+                </div>
+                <div v-show="!collapsedCategories.has('completed-' + cat.id)" class="border-t border-[#99907c]/10">
+                  <div v-for="(item, index) in cat.items" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
+                    <button @click="!isReadOnly && moveToTodo(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="material-symbols-outlined text-[#f2ca50] text-sm hover:text-[#4ade80] transition-all">check_circle</button>
+                    <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                    <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
+                    <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                      delete
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div v-if="!data.completed.length" class="flex items-center justify-center py-8 text-[#d0c5af]">
+              <button v-if="!isReadOnly" @click="openAddModal('completed')" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#f2ca50] hover:text-[#f2ca50] transition">
+                + 添加已完成
+              </button>
+              <div v-if="!completedCategories.length && !data.completed.length" class="flex items-center justify-center py-8 text-[#d0c5af]">
                 No completed items
               </div>
             </div>
@@ -235,6 +265,10 @@
                 <button @click="showImportHelp = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
                   <span class="material-symbols-outlined text-sm">help</span>
                   导入帮助
+                </button>
+                <button @click="showCategoryModal = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">folder</span>
+                  类别管理
                 </button>
                 <button @click="exportData" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
                   <span class="material-symbols-outlined text-sm">download</span>
@@ -366,6 +400,13 @@
               <button @click.stop="addDueDate = ''" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">清除</button>
               <button @click.stop="showAddPicker = false" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">关闭</button>
             </div>
+          </div>
+          <div v-if="addType === 'todos' || addType === 'completed'">
+            <label class="block text-sm text-[#d0c5af] mb-1">类别（可选）</label>
+            <select v-model="addCategoryId" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#99907c]/30 focus:border-[#f2ca50] outline-none">
+              <option value="">不选择类别</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
           </div>
           <div v-if="addType === 'issues'">
             <label class="block text-sm text-[#d0c5af] mb-1">严重程度</label>
@@ -515,6 +556,34 @@
       </div>
     </div>
 
+    <!-- Category Management Modal -->
+    <div v-if="showCategoryModal" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showCategoryModal = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-6 w-[400px]">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-[#e5e2e1]">管理类别</h3>
+          <button @click="showCategoryModal = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+        
+        <div class="space-y-2 mb-4 max-h-[300px] overflow-y-auto">
+          <div v-for="cat in categories" :key="cat.id" class="flex items-center gap-2 p-2 rounded bg-[#2a2a2a]/50 group">
+            <template v-if="editingCategoryId === cat.id">
+              <input v-model="editingCategoryName" @keyup.enter="updateCategory(cat.id, editingCategoryName)" @blur="updateCategory(cat.id, editingCategoryName)" class="flex-1 bg-[#353534] text-[#e5e2e1] px-2 py-1 rounded border border-[#f2ca50] outline-none" autofocus />
+            </template>
+            <template v-else>
+              <span class="flex-1 text-[#e5e2e1]">{{ cat.name }}</span>
+              <button @click="editingCategoryId = cat.id; editingCategoryName = cat.name" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 text-sm">edit</button>
+              <button @click="deleteCategory(cat.id)" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] text-sm">delete</button>
+            </template>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <input v-model="newCategoryName" placeholder="新类别名称" class="flex-1 bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded border border-[#99907c]/30 focus:border-[#f2ca50] outline-none" @keyup.enter="addCategory(newCategoryName); newCategoryName = ''" />
+          <button @click="addCategory(newCategoryName); newCategoryName = ''" class="px-4 py-2 bg-[#f2ca50] text-[#3c2f00] font-bold rounded hover:brightness-110">添加</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Import Success/Error Toast -->
     <div v-if="importSuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
       <span class="material-symbols-outlined text-[#4ade80]">check_circle</span>
@@ -613,7 +682,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import type { DayData, Item, Priority, Severity } from './types'
+import type { DayData, Item, Priority, Severity, Category } from './types'
 
 const currentDate = ref(new Date().toISOString().split('T')[0])
 const currentView = ref('dashboard')
@@ -628,6 +697,13 @@ const showAddPicker = ref(false)
 const addPickerYear = ref(0)
 const addPickerMonth = ref(0)
 const addPickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: boolean}[]>([])
+const categories = ref<Category[]>([])
+const editingCategoryId = ref<string | null>(null)
+const editingCategoryName = ref('')
+const newCategoryName = ref('')
+const showCategoryModal = ref(false)
+const collapsedCategories = ref<Set<string>>(new Set())
+const addCategoryId = ref('')
 const dates = ref<string[]>([])
 const calendarDays = ref<{day: number, date: string, hasData: boolean}[]>([])
 const displayMonth = ref('')
@@ -646,6 +722,57 @@ const filteredDates = computed(() => {
   }
   return dates.value
 })
+
+const todoCategories = computed(() => {
+  const grouped = new Map<string, Item[]>()
+  data.todos.forEach(item => {
+    const catId = item.category || '__uncategorized__'
+    if (!grouped.has(catId)) grouped.set(catId, [])
+    grouped.get(catId)!.push(item)
+  })
+  
+  const result: {id: string, name: string, items: Item[], isUncategorized: boolean}[] = []
+  
+  categories.value.forEach(cat => {
+    const items = grouped.get(cat.id) || []
+    if (items.length > 0) {
+      result.push({ id: cat.id, name: cat.name, items, isUncategorized: false })
+    }
+  })
+  
+  const uncategorized = grouped.get('__uncategorized__') || []
+  if (uncategorized.length > 0) {
+    result.push({ id: '__uncategorized__', name: '未分类', items: uncategorized, isUncategorized: true })
+  }
+  
+  return result
+})
+
+const completedCategories = computed(() => {
+  const grouped = new Map<string, Item[]>()
+  data.completed.forEach(item => {
+    const catId = item.category || '__uncategorized__'
+    if (!grouped.has(catId)) grouped.set(catId, [])
+    grouped.get(catId)!.push(item)
+  })
+  
+  const result: {id: string, name: string, items: Item[], isUncategorized: boolean}[] = []
+  
+  categories.value.forEach(cat => {
+    const items = grouped.get(cat.id) || []
+    if (items.length > 0) {
+      result.push({ id: cat.id, name: cat.name, items, isUncategorized: false })
+    }
+  })
+  
+  const uncategorized = grouped.get('__uncategorized__') || []
+  if (uncategorized.length > 0) {
+    result.push({ id: '__uncategorized__', name: '未分类', items: uncategorized, isUncategorized: true })
+  }
+  
+  return result
+})
+
 const isReadOnly = ref(false)
 const showHistoryModalFlag = ref(false)
 const showImportHelp = ref(false)
@@ -889,6 +1016,9 @@ function openAddModal(type: string) {
   if (isReadOnly.value) return
   addType.value = type
   addTitle.value = ''
+  addCategoryId.value = ''
+  addPriority.value = 'mid'
+  addDueDate.value = ''
   showAddModal.value = true
 }
 
@@ -900,7 +1030,8 @@ function submitAdd() {
     priority: addType.value === 'todos' ? addPriority.value : undefined,
     severity: (addType.value === 'issues' || addType.value === 'blockers') ? addSeverity.value : undefined,
     createdAt: new Date().toISOString(),
-    dueDate: addType.value === 'todos' && addDueDate.value ? addDueDate.value : undefined
+    dueDate: addType.value === 'todos' && addDueDate.value ? addDueDate.value : undefined,
+    category: (addType.value === 'todos' || addType.value === 'completed') && addCategoryId.value ? addCategoryId.value : undefined
   }
   if (addType.value === 'todos') data.todos.push(item)
   else if (addType.value === 'completed') data.completed.push(item)
@@ -911,6 +1042,7 @@ function submitAdd() {
   addTitle.value = ''
   addPriority.value = 'mid'
   addDueDate.value = ''
+  addCategoryId.value = ''
 }
 
 function toggleComplete(id: string) {
@@ -1134,7 +1266,59 @@ onMounted(() => {
   dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
   displayMonth.value = currentDate.value.slice(0, 7)
   generateCalendarDays()
+  loadCategories()
 })
+
+function loadCategories() {
+  const saved = localStorage.getItem('categories')
+  if (saved) {
+    categories.value = JSON.parse(saved)
+  }
+}
+
+function saveCategories() {
+  localStorage.setItem('categories', JSON.stringify(categories.value))
+}
+
+function addCategory(name: string) {
+  if (!name.trim()) return
+  const category: Category = {
+    id: crypto.randomUUID(),
+    name: name.trim()
+  }
+  categories.value.push(category)
+  saveCategories()
+}
+
+function updateCategory(id: string, name: string) {
+  const cat = categories.value.find(c => c.id === id)
+  if (cat) {
+    cat.name = name.trim()
+    saveCategories()
+  }
+  editingCategoryId.value = null
+}
+
+function deleteCategory(id: string) {
+  categories.value = categories.value.filter(c => c.id !== id)
+  data.todos.forEach(t => { if (t.category === id) t.category = undefined })
+  data.completed.forEach(t => { if (t.category === id) t.category = undefined })
+  saveData()
+  saveCategories()
+}
+
+function toggleCategoryCollapse(categoryId: string) {
+  if (collapsedCategories.value.has(categoryId)) {
+    collapsedCategories.value.delete(categoryId)
+  } else {
+    collapsedCategories.value.add(categoryId)
+  }
+}
+
+function openAddModalWithCategory(type: string, categoryId: string) {
+  openAddModal(type)
+  addCategoryId.value = categoryId
+}
 </script>
 
 <style>
