@@ -81,11 +81,18 @@
                     <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
                   </div>
                   <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
-                  <span v-if="item.priority" class="text-xs px-2 py-0.5 rounded" :class="{
-                    'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.priority === 'high',
-                    'bg-[#ffb84d]/20 text-[#ffb84d]': item.priority === 'mid',
-                    'bg-[#4ade80]/20 text-[#4ade80]': item.priority === 'low'
-                  }">{{ item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</span>
+                  <button
+                    @click.stop="!isReadOnly && togglePriority(item)"
+                    :disabled="isReadOnly"
+                    class="text-xs px-2 py-0.5 rounded transition-all"
+                    :class="[
+                      isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                      item.priority === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                      item.priority === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                      item.priority === 'low' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                      'bg-[#99907c]/10 text-[#99907c]'
+                    ]"
+                  >{{ !item.priority ? '+' : item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</button>
                 </div>
                 <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
                   delete
@@ -134,11 +141,18 @@
               <div v-for="(item, index) in data.issues" :key="item.id" draggable="true" @dragstart="onDragStart('issues', item)" @dragover.prevent="onDragOver('issues', index)" @drop="onDrop('issues', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'issues' && dragOverIndex?.index === index}" class="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a]/50 group">
                 <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs px-2 py-0.5 rounded" :class="{
-                    'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.severity === 'high',
-                    'bg-[#ffb84d]/20 text-[#ffb84d]': item.severity === 'mid',
-                    'bg-[#ffe066]/20 text-[#ffe066]': item.severity === 'low'
-                  }">{{ item.severity === 'high' ? '严重' : item.severity === 'mid' ? '一般' : '轻微' }}</span>
+                  <button
+                    @click.stop="!isReadOnly && toggleSeverity(item)"
+                    :disabled="isReadOnly"
+                    class="text-xs px-2 py-0.5 rounded transition-all"
+                    :class="[
+                      isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                      item.severity === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                      item.severity === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                      item.severity === 'low' ? 'bg-[#ffe066]/20 text-[#ffe066]' :
+                      'bg-[#99907c]/10 text-[#99907c]'
+                    ]"
+                  >{{ !item.severity ? '+' : item.severity === 'high' ? '严重' : item.severity === 'mid' ? '一般' : '轻微' }}</button>
                   <button @click.stop="!isReadOnly && deleteItem('issues', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
                     delete
                   </button>
@@ -860,6 +874,22 @@ function moveToTodo(item: Item) {
     data.todos.unshift(item)
     saveData()
   }
+}
+
+function togglePriority(item: Item) {
+  if (isReadOnly.value) return
+  const priorities: (Priority | undefined)[] = [undefined, 'low', 'mid', 'high']
+  const idx = priorities.indexOf(item.priority)
+  item.priority = priorities[(idx + 1) % priorities.length] as Priority | undefined
+  saveData()
+}
+
+function toggleSeverity(item: Item) {
+  if (isReadOnly.value) return
+  const severities: (Severity | undefined)[] = [undefined, 'low', 'mid', 'high']
+  const idx = severities.indexOf(item.severity)
+  item.severity = severities[(idx + 1) % severities.length] as Severity | undefined
+  saveData()
 }
 
 function deleteItem(type: string, id: string) {
