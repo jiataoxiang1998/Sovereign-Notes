@@ -1,9 +1,16 @@
 export type Priority = 'high' | 'mid' | 'low'
 export type Severity = 'high' | 'mid' | 'low'
 
+export interface Category {
+  id: string
+  name: string
+  color?: string
+}
+
 export interface Item {
   id: string
   title: string
+  category?: string
   priority?: Priority
   severity?: Severity
   createdAt: string
