@@ -28,12 +28,9 @@
     <!-- Main Workspace -->
     <main class="pl-64 h-screen flex flex-col w-full">
       <!-- TopNavBar -->
-      <header class="h-16 w-full fixed top-0 z-40 bg-[#131313] flex justify-between items-center px-8 font-['Manrope'] font-light border-b border-[#f2ca50]/10" style="-webkit-app-region: drag; position: relative;">
-        <div class="flex items-center gap-3" style="-webkit-app-region: no-drag;">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f2ca50] to-[#d4af37] flex items-center justify-center">
-            <span class="material-symbols-outlined text-[#3c2f00] text-lg">edit_note</span>
-          </div>
-          <span class="text-[#d0c5af] text-xs tracking-widest uppercase opacity-60">Daily Summary</span>
+      <header class="h-12 w-full fixed top-0 z-40 bg-[#131313] flex justify-between items-center px-8 font-['Manrope'] font-light border-b border-[#f2ca50]/10" style="-webkit-app-region: drag; position: relative;">
+        <div class="flex items-center" style="-webkit-app-region: no-drag;">
+          <span class="text-[#d0c5af] text-xs tracking-widest uppercase opacity-60">Sovereign Notes</span>
         </div>
         <div class="flex items-center gap-2" style="-webkit-app-region: no-drag;">
           <button @click="minimize" class="w-10 h-8 flex items-center justify-center hover:bg-[#2a2a2a] rounded transition" title="最小化">
@@ -49,7 +46,7 @@
       </header>
 
       <!-- Content Canvas -->
-      <div class="mt-16 p-10 overflow-y-auto flex-1 bg-[#0e0e0e]">
+      <div class="mt-12 p-8 overflow-y-auto flex-1 bg-[#0e0e0e]">
         <!-- Dashboard View -->
         <template v-if="currentView === 'dashboard'">
           <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
