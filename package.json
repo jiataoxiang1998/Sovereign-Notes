@@ -32,9 +32,13 @@
     "directories": {
       "output": "release"
     },
-    "win": {
-      "target": "nsis",
-      "icon": "resources/icon.ico"
+"win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

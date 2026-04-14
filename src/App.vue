@@ -75,12 +75,17 @@
                 </button>
             </div>
             <div class="space-y-3">
-              <div v-for="item in data.todos" :key="item.id" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer">
+              <div v-for="(item, index) in data.todos" :key="item.id" draggable="true" @dragstart="onDragStart('todos', item)" @dragover.prevent="onDragOver('todos', index)" @drop="onDrop('todos', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'todos' && dragOverIndex?.index === index}" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer">
                 <div class="flex items-center gap-4">
                   <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
                     <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
                   </div>
                   <span class="text-[#e5e2e1] font-medium">{{ item.title }}</span>
+                  <span v-if="item.priority" class="text-xs px-2 py-0.5 rounded" :class="{
+                    'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.priority === 'high',
+                    'bg-[#ffb84d]/20 text-[#ffb84d]': item.priority === 'mid',
+                    'bg-[#4ade80]/20 text-[#4ade80]': item.priority === 'low'
+                  }">{{ item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</span>
                 </div>
                 <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
                   delete
@@ -103,7 +108,7 @@
               <span class="text-[10px] bg-[#f2ca50]/10 text-[#f2ca50] px-2 py-1 rounded font-bold">{{ data.completed.length }} TODAY</span>
             </div>
             <div class="space-y-2 overflow-y-auto max-h-[300px] pr-2">
-              <div v-for="item in data.completed" :key="item.id" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
+              <div v-for="(item, index) in data.completed" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
                 <span class="material-symbols-outlined text-[#f2ca50] text-sm">check_circle</span>
                 <span class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1">{{ item.title }}</span>
                 <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
@@ -126,18 +131,18 @@
               </div>
             </div>
             <div class="space-y-4">
-              <div v-for="item in data.issues" :key="item.id" class="p-4 rounded-lg bg-[#2a2a2a]/50 group">
-                <div class="flex items-center justify-between">
-                  <span class="text-[#e5e2e1]">{{ item.title }}</span>
+              <div v-for="(item, index) in data.issues" :key="item.id" draggable="true" @dragstart="onDragStart('issues', item)" @dragover.prevent="onDragOver('issues', index)" @drop="onDrop('issues', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'issues' && dragOverIndex?.index === index}" class="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a]/50 group">
+                <span class="text-[#e5e2e1] flex-1">{{ item.title }}</span>
+                <div class="flex items-center gap-2">
                   <span class="text-xs px-2 py-0.5 rounded" :class="{
                     'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.severity === 'high',
                     'bg-[#ffb84d]/20 text-[#ffb84d]': item.severity === 'mid',
                     'bg-[#ffe066]/20 text-[#ffe066]': item.severity === 'low'
                   }">{{ item.severity === 'high' ? '严重' : item.severity === 'mid' ? '一般' : '轻微' }}</span>
+                  <button @click.stop="!isReadOnly && deleteItem('issues', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                    delete
+                  </button>
                 </div>
-                <button @click.stop="!isReadOnly && deleteItem('issues', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all mt-2">
-                  delete
-                </button>
               </div>
               <button @click="!isReadOnly && openAddModal('issues')" :class="isReadOnly ? 'hidden' : ''" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-all uppercase tracking-widest">
                 + 添加问题
@@ -155,12 +160,12 @@
               <span class="material-symbols-outlined text-[#ffb4ab]">warning</span>
             </div>
             <div class="flex flex-col gap-4">
-              <div v-for="item in data.blockers" :key="item.id" class="bg-[#93000a]/20 p-4 rounded-lg border-l-4 border-[#ffb4ab]">
-                <div class="flex justify-between items-start">
+              <div v-for="(item, index) in data.blockers" :key="item.id" draggable="true" @dragstart="onDragStart('blockers', item)" @dragover.prevent="onDragOver('blockers', index)" @drop="onDrop('blockers', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'blockers' && dragOverIndex?.index === index}" class="flex items-center justify-between bg-[#93000a]/20 p-3 rounded-lg border-l-4 border-[#ffb4ab]">
+                <div class="flex items-center gap-3 flex-1">
                   <h4 class="text-[#ffdad6] font-bold text-sm">{{ item.title }}</h4>
                   <span class="text-[10px] font-bold text-[#ffb4ab]">CRITICAL</span>
                 </div>
-                <button @click.stop="!isReadOnly && deleteItem('blockers', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-xs text-[#d0c5af] hover:text-[#ffb4ab] mt-2">delete</button>
+                <button @click.stop="!isReadOnly && deleteItem('blockers', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-xs text-[#d0c5af] hover:text-[#ffb4ab] transition-all">delete</button>
               </div>
               <button @click="!isReadOnly && openAddModal('blockers')" :class="isReadOnly ? 'hidden' : ''" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-all uppercase tracking-widest">
                 Report New Blocker
@@ -183,8 +188,27 @@
         <!-- History View -->
         <template v-if="currentView === 'history'">
           <section class="mb-16">
-            <h1 class="text-5xl font-extrabold font-['Manrope'] tracking-tighter text-[#e5e2e1] mb-4">Historical Archives</h1>
-            <p class="text-[#d0c5af] max-w-xl text-lg font-light leading-relaxed">Review your journey of productivity. Every summary is a testament to your discipline.</p>
+            <div class="flex justify-between items-start">
+              <div>
+                <h1 class="text-5xl font-extrabold font-['Manrope'] tracking-tighter text-[#e5e2e1] mb-4">Historical Archives</h1>
+                <p class="text-[#d0c5af] max-w-xl text-lg font-light leading-relaxed">Review your journey of productivity. Every summary is a testament to your discipline.</p>
+              </div>
+              <div class="flex gap-3">
+                <button @click="showImportHelp = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">help</span>
+                  导入帮助
+                </button>
+                <button @click="exportData" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">download</span>
+                  导出数据
+                </button>
+                <label class="px-4 py-2 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition-all flex items-center gap-2 cursor-pointer">
+                  <span class="material-symbols-outlined text-sm">upload</span>
+                  导入数据
+                  <input type="file" accept=".json" class="hidden" @change="importData"/>
+                </label>
+              </div>
+            </div>
           </section>
 
           <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
@@ -284,7 +308,7 @@
               <button v-for="p in priorities" :key="p.value" @click="addPriority = p.value" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === p.value ? `bg-${p.color}/20 border-${p.color} text-${p.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ p.label }}</button>
             </div>
           </div>
-          <div v-if="addType === 'issues' || addType === 'blockers'">
+          <div v-if="addType === 'issues'">
             <label class="block text-sm text-[#d0c5af] mb-1">严重程度</label>
             <div class="flex gap-2">
               <button v-for="s in severities" :key="s.value" @click="addSeverity = s.value" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === s.value ? `bg-${s.color}/20 border-${s.color} text-${s.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ s.label }}</button>
@@ -380,6 +404,66 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Import Help Modal -->
+    <div v-if="showImportHelp" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showImportHelp = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-8 w-[600px] max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h3 class="text-2xl font-bold font-['Manrope'] text-[#f2ca50]">数据导入帮助</h3>
+          </div>
+          <button @click="showImportHelp = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+        
+        <div class="space-y-6 text-[#d0c5af]">
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📤 导出数据</h4>
+            <p class="text-sm">点击"导出数据"按钮，将当前所有历史记录下载为 JSON 文件。</p>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📥 导入数据</h4>
+            <p class="text-sm">点击"导入数据"按钮，选择导出的 JSON 文件即可导入数据。</p>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">🔄 同步说明</h4>
+            <ul class="text-sm space-y-2">
+              <li>• 导入时会合并数据，相同日期的数据会被覆盖</li>
+              <li>• 建议导出前先备份当前数据</li>
+              <li>• 可以在不同电脑间通过文件传输同步数据</li>
+            </ul>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📋 文件格式</h4>
+            <pre class="text-xs text-[#e5e2e1] whitespace-pre-wrap font-mono mt-2">{
+  "YYYY-MM-DD": {
+    "date": "YYYY-MM-DD",
+    "todos": [...],
+    "completed": [...],
+    "issues": [...],
+    "blockers": [...]
+  }
+}</pre>
+          </div>
+        </div>
+        
+        <div class="flex justify-end mt-8">
+          <button @click="showImportHelp = false" class="px-6 py-2.5 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition">知道了</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Success/Error Toast -->
+    <div v-if="importSuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+      <span class="material-symbols-outlined text-[#4ade80]">check_circle</span>
+      <span class="text-[#4ade80] text-sm">导入成功</span>
+    </div>
+    <div v-if="importError" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#ffb4ab] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+      <span class="material-symbols-outlined text-[#ffb4ab]">error</span>
+      <span class="text-[#ffb4ab] text-sm">{{ importError }}</span>
     </div>
 
     <!-- Summary Modal for Today -->
@@ -500,11 +584,16 @@ const filteredDates = computed(() => {
 })
 const isReadOnly = ref(false)
 const showHistoryModalFlag = ref(false)
+const showImportHelp = ref(false)
+const importSuccess = ref(false)
+const importError = ref('')
 const showSummaryModalFlag = ref(false)
 const showSummaryTab = ref('detail')
 const showHistorySummaryTab = ref('detail')
 const currentSummaryText = ref('')
 const copySuccess = ref(false)
+const draggedItem = ref<{type: string, item: Item} | null>(null)
+const dragOverIndex = ref<{type: string, index: number} | null>(null)
 const historyModalData = ref<DayData | null>(null)
 
 function generateSummaryText(date: string, d: DayData): string {
@@ -568,6 +657,49 @@ function copyCurrentSummary() {
 function showCopySuccess() {
   copySuccess.value = true
   setTimeout(() => { copySuccess.value = false }, 1000)
+}
+
+function exportData() {
+  const keys = Object.keys(localStorage).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+  const exportObj: Record<string, DayData> = {}
+  keys.forEach(k => {
+    exportObj[k] = JSON.parse(localStorage.getItem(k)!)
+  })
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `daily-summary-${new Date().toISOString().split('T')[0]}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function importData(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target?.result as string)
+      let count = 0
+      for (const [date, dayData] of Object.entries(data)) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          localStorage.setItem(date, JSON.stringify(dayData))
+          count++
+        }
+      }
+      importSuccess.value = true
+      setTimeout(() => { importSuccess.value = false }, 3000)
+      const keys = Object.keys(localStorage)
+      dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
+      generateCalendarDays()
+    } catch (err) {
+      importError.value = '文件格式错误'
+      setTimeout(() => { importError.value = '' }, 3000)
+    }
+  }
+  reader.readAsText(file)
+  ;(event.target as HTMLInputElement).value = ''
 }
 
 function isHistoricalDate(date: string): boolean {
@@ -693,6 +825,49 @@ function deleteItem(type: string, id: string) {
   saveData()
 }
 
+function onDragStart(type: string, item: Item) {
+  if (isReadOnly.value) return
+  draggedItem.value = { type, item }
+}
+
+function onDragOver(type: string, index: number) {
+  if (isReadOnly.value || !draggedItem.value) return
+  dragOverIndex.value = { type, index }
+}
+
+function onDrop(type: string, index: number) {
+  if (isReadOnly.value || !draggedItem.value) return
+  const { type: srcType, item } = draggedItem.value
+  
+  let srcList: Item[]
+  if (srcType === 'todos') srcList = data.todos
+  else if (srcType === 'completed') srcList = data.completed
+  else if (srcType === 'issues') srcList = data.issues
+  else srcList = data.blockers
+  
+  const srcIdx = srcList.findIndex(i => i.id === item.id)
+  if (srcIdx > -1) {
+    srcList.splice(srcIdx, 1)
+  }
+  
+  let dstList: Item[]
+  if (type === 'todos') dstList = data.todos
+  else if (type === 'completed') dstList = data.completed
+  else if (type === 'issues') dstList = data.issues
+  else dstList = data.blockers
+  
+  dstList.splice(index, 0, item)
+  saveData()
+  
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+function onDragEnd() {
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
 function bulkDelete() {
   data.todos = []
   data.completed = []
@@ -731,84 +906,6 @@ function maximize() { window.electronAPI?.maximize() }
 function close() { window.electronAPI?.close() }
 
 onMounted(() => {
-  // 初始化示例数据（如果不存在）
-  if (!localStorage.getItem('2026-04-11')) {
-    const data11 = {
-      date: '2026-04-11',
-      todos: [
-        {id: '1', title: '完成项目规划', priority: 'high', createdAt: '2026-04-11T09:00:00Z'},
-        {id: '2', title: '代码审查', priority: 'mid', createdAt: '2026-04-11T10:00:00Z'},
-        {id: '3', title: '更新文档', priority: 'low', createdAt: '2026-04-11T11:00:00Z'}
-      ],
-      completed: [
-        {id: '4', title: '需求分析', completedAt: '2026-04-11T14:30:00Z', createdAt: '2026-04-11T09:00:00Z'},
-        {id: '5', title: '设计界面', completedAt: '2026-04-11T16:00:00Z', createdAt: '2026-04-11T10:00:00Z'}
-      ],
-      issues: [
-        {id: '6', title: '数据库连接超时', severity: 'high', createdAt: '2026-04-11T13:00:00Z'}
-      ],
-      blockers: []
-    };
-    localStorage.setItem('2026-04-11', JSON.stringify(data11));
-  }
-  
-  if (!localStorage.getItem('2026-04-12')) {
-    const data12 = {
-      date: '2026-04-12',
-      todos: [
-        {id: '7', title: '修复Bug', priority: 'high', createdAt: '2026-04-12T09:00:00Z'},
-        {id: '8', title: '性能优化', priority: 'mid', createdAt: '2026-04-12T10:00:00Z'}
-      ],
-      completed: [
-        {id: '9', title: 'API开发', completedAt: '2026-04-12T15:00:00Z', createdAt: '2026-04-12T09:00:00Z'},
-        {id: '10', title: '单元测试', completedAt: '2026-04-12T17:00:00Z', createdAt: '2026-04-12T11:00:00Z'}
-      ],
-      issues: [],
-      blockers: [
-        {id: '11', title: '第三方API文档缺失', severity: 'high', createdAt: '2026-04-12T14:00:00Z'}
-      ]
-    };
-    localStorage.setItem('2026-04-12', JSON.stringify(data12));
-  }
-
-  if (!localStorage.getItem('2026-04-01')) {
-    const data401 = {
-      date: '2026-04-01',
-      todos: [
-        {id: '12', title: '月度计划制定', priority: 'high', createdAt: '2026-04-01T09:00:00Z'},
-        {id: '13', title: '团队会议', priority: 'mid', createdAt: '2026-04-01T10:00:00Z'},
-        {id: '14', title: '配置服务器', priority: 'mid', createdAt: '2026-04-01T14:00:00Z'}
-      ],
-      completed: [
-        {id: '15', title: '第一季度总结', completedAt: '2026-04-01T11:00:00Z', createdAt: '2026-04-01T09:00:00Z'},
-        {id: '16', title: '更新任务看板', completedAt: '2026-04-01T16:00:00Z', createdAt: '2026-04-01T10:00:00Z'}
-      ],
-      issues: [
-        {id: '17', title: '服务器磁盘空间不足', severity: 'mid', createdAt: '2026-04-01T13:00:00Z'}
-      ],
-      blockers: []
-    };
-    localStorage.setItem('2026-04-01', JSON.stringify(data401));
-  }
-
-  if (!localStorage.getItem('2026-03-01')) {
-    const data301 = {
-      date: '2026-03-01',
-      todos: [
-        {id: '18', title: '季度目标设定', priority: 'high', createdAt: '2026-03-01T09:00:00Z'},
-        {id: '19', title: '采购设备', priority: 'mid', createdAt: '2026-03-01T10:00:00Z'}
-      ],
-      completed: [
-        {id: '20', title: '年度报告', completedAt: '2026-03-01T15:00:00Z', createdAt: '2026-03-01T09:00:00Z'}
-      ],
-      issues: [],
-      blockers: [
-        {id: '21', title: '预算审批延迟', severity: 'high', createdAt: '2026-03-01T14:00:00Z'}
-      ]
-    };
-    localStorage.setItem('2026-03-01', JSON.stringify(data301));
-  }
-  
   loadDate(currentDate.value)
   const keys = Object.keys(localStorage)
   dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
