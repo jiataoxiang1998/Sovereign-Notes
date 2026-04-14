@@ -80,7 +80,7 @@
                   <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
                     <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
                   </div>
-                  <span class="text-[#e5e2e1] font-medium">{{ item.title }}</span>
+                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
                   <span v-if="item.priority" class="text-xs px-2 py-0.5 rounded" :class="{
                     'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.priority === 'high',
                     'bg-[#ffb84d]/20 text-[#ffb84d]': item.priority === 'mid',
@@ -110,7 +110,7 @@
             <div class="space-y-2 overflow-y-auto max-h-[300px] pr-2">
               <div v-for="(item, index) in data.completed" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
                 <span class="material-symbols-outlined text-[#f2ca50] text-sm">check_circle</span>
-                <span class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1">{{ item.title }}</span>
+                <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
                 <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
                 <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
                   delete
@@ -132,7 +132,7 @@
             </div>
             <div class="space-y-4">
               <div v-for="(item, index) in data.issues" :key="item.id" draggable="true" @dragstart="onDragStart('issues', item)" @dragover.prevent="onDragOver('issues', index)" @drop="onDrop('issues', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'issues' && dragOverIndex?.index === index}" class="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a]/50 group">
-                <span class="text-[#e5e2e1] flex-1">{{ item.title }}</span>
+                <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-xs px-2 py-0.5 rounded" :class="{
                     'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.severity === 'high',
@@ -162,7 +162,7 @@
             <div class="flex flex-col gap-4">
               <div v-for="(item, index) in data.blockers" :key="item.id" draggable="true" @dragstart="onDragStart('blockers', item)" @dragover.prevent="onDragOver('blockers', index)" @drop="onDrop('blockers', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'blockers' && dragOverIndex?.index === index}" class="flex items-center justify-between bg-[#93000a]/20 p-3 rounded-lg border-l-4 border-[#ffb4ab]">
                 <div class="flex items-center gap-3 flex-1">
-                  <h4 class="text-[#ffdad6] font-bold text-sm">{{ item.title }}</h4>
+                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#ffdad6] font-bold text-sm px-2 py-1 rounded outline-none border border-[#ffb4ab]" autofocus /><h4 v-else @click="startEdit(item)" class="text-[#ffdad6] font-bold text-sm cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</h4>
                   <span class="text-[10px] font-bold text-[#ffb4ab]">CRITICAL</span>
                 </div>
                 <button @click.stop="!isReadOnly && deleteItem('blockers', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-xs text-[#d0c5af] hover:text-[#ffb4ab] transition-all">delete</button>
@@ -595,6 +595,9 @@ const copySuccess = ref(false)
 const draggedItem = ref<{type: string, item: Item} | null>(null)
 const dragOverIndex = ref<{type: string, index: number} | null>(null)
 const historyModalData = ref<DayData | null>(null)
+const editingId = ref<string | null>(null)
+const editingTitle = ref('')
+const editInput = ref<HTMLInputElement | null>(null)
 
 function generateSummaryText(date: string, d: DayData): string {
   let text = `${date} Daily Summary\n${'='.repeat(20)}\n\n`
@@ -823,6 +826,25 @@ function deleteItem(type: string, id: string) {
   else if (type === 'issues') data.issues = data.issues.filter(i => i.id !== id)
   else if (type === 'blockers') data.blockers = data.blockers.filter(i => i.id !== id)
   saveData()
+}
+
+function startEdit(item: Item) {
+  if (isReadOnly.value) return
+  editingId.value = item.id
+  editingTitle.value = item.title
+}
+
+function saveEdit(id: string) {
+  if (!editingTitle.value.trim()) {
+    editingId.value = null
+    return
+  }
+  const item = data.todos.find(i => i.id === id) || data.completed.find(i => i.id === id) || data.issues.find(i => i.id === id) || data.blockers.find(i => i.id === id)
+  if (item) {
+    item.title = editingTitle.value.trim()
+    saveData()
+  }
+  editingId.value = null
 }
 
 function onDragStart(type: string, item: Item) {
