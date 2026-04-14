@@ -30,7 +30,7 @@
   },
   "build": {
     "appId": "com.dailyrequester.app",
-    "productName": "每日工作总结助手",
+    "productName": "Sovereign Notes",
     "directories": {
       "output": "release"
     },
