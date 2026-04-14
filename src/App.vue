@@ -93,6 +93,30 @@
                       'bg-[#99907c]/10 text-[#99907c]'
                     ]"
                   >{{ !item.priority ? '+' : item.priority === 'high' ? '高' : item.priority === 'mid' ? '中' : '低' }}</button>
+                  <div class="relative">
+                    <button v-if="item.dueDate" @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#f2ca50]/20 text-[#f2ca50] flex items-center gap-1 hover:bg-[#f2ca50]/30">
+                      <span class="material-symbols-outlined text-[10px]">schedule</span>
+                      {{ item.dueDate }}
+                    </button>
+                    <button v-else @click.stop="!isReadOnly && (dueDatePickerId = item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                      <span class="material-symbols-outlined text-[10px]">schedule</span>
+                    </button>
+                    <div v-if="dueDatePickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[180px]" @click.stop>
+                      <div class="flex justify-between items-center mb-2">
+                        <button @click.stop="changePickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                        <span class="text-xs text-[#f2ca50]">{{ pickerYear }}年{{ pickerMonth }}月</span>
+                        <button @click.stop="changePickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+                      </div>
+                      <div class="grid grid-cols-7 gap-1 mb-1">
+                        <span v-for="w in ['日','一','二','三','四','五','六']" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                      </div>
+                      <div class="grid grid-cols-7 gap-1">
+                        <button v-for="d in pickerDays" :key="d.date" @click.stop="!isReadOnly && confirmDueDate(item, d.date)" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+                      </div>
+                      <button @click.stop="!isReadOnly && (delete item.dueDate, saveData(), dueDatePickerId = null)" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">清除</button>
+                      <button @click.stop="dueDatePickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">关闭</button>
+                    </div>
+                  </div>
                 </div>
                 <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
                   delete
@@ -320,6 +344,27 @@
             <label class="block text-sm text-[#d0c5af] mb-1">优先级</label>
             <div class="flex gap-2">
               <button v-for="p in priorities" :key="p.value" @click="addPriority = p.value" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === p.value ? `bg-${p.color}/20 border-${p.color} text-${p.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ p.label }}</button>
+            </div>
+          </div>
+          <div v-if="addType === 'todos'" class="relative">
+            <label class="block text-sm text-[#d0c5af] mb-1">截止日期（可选）</label>
+            <button @click="toggleAddPicker" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#f2ca50]/30 text-left hover:border-[#f2ca50] transition">
+              {{ addDueDate || '点击选择日期...' }}
+            </button>
+            <div v-if="showAddPicker" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[200px]" @click.stop>
+              <div class="flex justify-between items-center mb-2">
+                <button @click.stop="changeAddPickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                <span class="text-xs text-[#f2ca50]">{{ addPickerYear }}年{{ addPickerMonth }}月</span>
+                <button @click.stop="changeAddPickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+              </div>
+              <div class="grid grid-cols-7 gap-1 mb-1">
+                <span v-for="w in ['日','一','二','三','四','五','六']" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+              </div>
+              <div class="grid grid-cols-7 gap-1">
+                <button v-for="d in addPickerDays" :key="d.date" @click.stop="addDueDate = d.date; showAddPicker = false" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+              </div>
+              <button @click.stop="addDueDate = ''" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">清除</button>
+              <button @click.stop="showAddPicker = false" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">关闭</button>
             </div>
           </div>
           <div v-if="addType === 'issues'">
@@ -578,6 +623,11 @@ const addType = ref('')
 const addTitle = ref('')
 const addPriority = ref<Priority>('mid')
 const addSeverity = ref<Severity>('mid')
+const addDueDate = ref('')
+const showAddPicker = ref(false)
+const addPickerYear = ref(0)
+const addPickerMonth = ref(0)
+const addPickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: boolean}[]>([])
 const dates = ref<string[]>([])
 const calendarDays = ref<{day: number, date: string, hasData: boolean}[]>([])
 const displayMonth = ref('')
@@ -612,6 +662,11 @@ const historyModalData = ref<DayData | null>(null)
 const editingId = ref<string | null>(null)
 const editingTitle = ref('')
 const editInput = ref<HTMLInputElement | null>(null)
+const dueDateItemId = ref<string | null>(null)
+const dueDatePickerId = ref<string | null>(null)
+const pickerYear = ref(0)
+const pickerMonth = ref(0)
+const pickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: boolean}[]>([])
 
 function generateSummaryText(date: string, d: DayData): string {
   let text = `${date} Daily Summary\n${'='.repeat(20)}\n\n`
@@ -844,7 +899,8 @@ function submitAdd() {
     title: addTitle.value,
     priority: addType.value === 'todos' ? addPriority.value : undefined,
     severity: (addType.value === 'issues' || addType.value === 'blockers') ? addSeverity.value : undefined,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    dueDate: addType.value === 'todos' && addDueDate.value ? addDueDate.value : undefined
   }
   if (addType.value === 'todos') data.todos.push(item)
   else if (addType.value === 'completed') data.completed.push(item)
@@ -853,6 +909,8 @@ function submitAdd() {
   saveData()
   showAddModal.value = false
   addTitle.value = ''
+  addPriority.value = 'mid'
+  addDueDate.value = ''
 }
 
 function toggleComplete(id: string) {
@@ -890,6 +948,77 @@ function toggleSeverity(item: Item) {
   const idx = severities.indexOf(item.severity)
   item.severity = severities[(idx + 1) % severities.length] as Severity | undefined
   saveData()
+}
+
+function initPicker(item: Item) {
+  const d = item.dueDate ? new Date(item.dueDate) : new Date()
+  pickerYear.value = d.getFullYear()
+  pickerMonth.value = d.getMonth() + 1
+  updatePickerDays(item.dueDate)
+}
+
+function updatePickerDays(currentDue?: string) {
+  const firstDay = new Date(pickerYear.value, pickerMonth.value - 1, 1).getDay()
+  const daysInMonth = new Date(pickerYear.value, pickerMonth.value, 0).getDate()
+  const today = new Date().toISOString().split('T')[0]
+  const days: {day: number, date: string, valid: boolean, isCurrent: boolean}[] = []
+  for (let i = 0; i < firstDay; i++) days.push({day: 0, date: '', valid: false, isCurrent: false})
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = `${pickerYear.value}-${String(pickerMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({day: i, date, valid: true, isCurrent: date === currentDue})
+  }
+  pickerDays.value = days
+}
+
+function changePickerMonth(delta: number) {
+  pickerMonth.value += delta
+  if (pickerMonth.value > 12) { pickerMonth.value = 1; pickerYear.value++ }
+  if (pickerMonth.value < 1) { pickerMonth.value = 12; pickerYear.value-- }
+  updatePickerDays()
+}
+
+function confirmDueDate(item: Item, date: string) {
+  item.dueDate = date
+  saveData()
+  dueDatePickerId.value = null
+}
+
+function toggleAddPicker() {
+  showAddPicker.value = !showAddPicker.value
+  if (showAddPicker.value) {
+    const d = addDueDate.value ? new Date(addDueDate.value) : new Date()
+    addPickerYear.value = d.getFullYear()
+    addPickerMonth.value = d.getMonth() + 1
+    updateAddPickerDays()
+  }
+}
+
+function updateAddPickerDays() {
+  const firstDay = new Date(addPickerYear.value, addPickerMonth.value - 1, 1).getDay()
+  const daysInMonth = new Date(addPickerYear.value, addPickerMonth.value, 0).getDate()
+  const days: {day: number, date: string, valid: boolean, isCurrent: boolean}[] = []
+  for (let i = 0; i < firstDay; i++) days.push({day: 0, date: '', valid: false, isCurrent: false})
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = `${addPickerYear.value}-${String(addPickerMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({day: i, date, valid: true, isCurrent: date === addDueDate.value})
+  }
+  addPickerDays.value = days
+}
+
+function changeAddPickerMonth(delta: number) {
+  addPickerMonth.value += delta
+  if (addPickerMonth.value > 12) { addPickerMonth.value = 1; addPickerYear.value++ }
+  if (addPickerMonth.value < 1) { addPickerMonth.value = 12; addPickerYear.value-- }
+  updateAddPickerDays()
+}
+
+function setDueDate(item: Item) {
+  const input = document.querySelector('input[type="date"]') as HTMLInputElement
+  if (input?.value) {
+    item.dueDate = input.value
+    saveData()
+  }
+  dueDateItemId.value = null
 }
 
 function deleteItem(type: string, id: string) {

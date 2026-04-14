@@ -8,6 +8,7 @@ export interface Item {
   severity?: Severity
   createdAt: string
   completedAt?: string
+  dueDate?: string
 }
 
 export interface DayData {
