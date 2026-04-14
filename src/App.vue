@@ -774,6 +774,37 @@ function loadDate(date: string) {
     data.completed = []
     data.issues = []
     data.blockers = []
+    carryOverFromYesterday(date)
+  }
+}
+
+function carryOverFromYesterday(date: string) {
+  const yesterday = new Date(date)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yStr = yesterday.toISOString().split('T')[0]
+  const yData = localStorage.getItem(yStr)
+  if (!yData) return
+  const y = JSON.parse(yData)
+  if (y.todos?.length) {
+    y.todos.forEach((t: Item) => {
+      const item = { ...t, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+      data.todos.push(item)
+    })
+  }
+  if (y.issues?.length) {
+    y.issues.forEach((i: Item) => {
+      const item = { ...i, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+      data.issues.push(item)
+    })
+  }
+  if (y.blockers?.length) {
+    y.blockers.forEach((b: Item) => {
+      const item = { ...b, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+      data.blockers.push(item)
+    })
+  }
+  if (data.todos.length || data.issues.length || data.blockers.length) {
+    saveData()
   }
 }
 
