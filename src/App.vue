@@ -109,7 +109,7 @@
             </div>
             <div class="space-y-2 overflow-y-auto max-h-[300px] pr-2">
               <div v-for="(item, index) in data.completed" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
-                <span class="material-symbols-outlined text-[#f2ca50] text-sm">check_circle</span>
+                <button @click="!isReadOnly && moveToTodo(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="material-symbols-outlined text-[#f2ca50] text-sm hover:text-[#4ade80] transition-all">check_circle</button>
                 <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
                 <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
                 <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
@@ -847,6 +847,17 @@ function toggleComplete(id: string) {
     const item = data.todos.splice(idx, 1)[0]
     item.completedAt = new Date().toISOString()
     data.completed.unshift(item)
+    saveData()
+  }
+}
+
+function moveToTodo(item: Item) {
+  if (isReadOnly.value) return
+  const idx = data.completed.findIndex(i => i.id === item.id)
+  if (idx > -1) {
+    data.completed.splice(idx, 1)
+    delete item.completedAt
+    data.todos.unshift(item)
     saveData()
   }
 }
