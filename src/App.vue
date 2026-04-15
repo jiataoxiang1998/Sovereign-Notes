@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex bg-[#131313] text-[#e5e2e1] overflow-hidden font-['Inter']">
+  <div class="h-screen flex bg-[#131313] text-[#e5e2e1] font-['Inter']">
     <!-- SideNavBar -->
     <aside class="bg-[#0E0E0E] h-screen w-64 fixed left-0 top-0 flex flex-col py-8 z-50">
       <div class="px-8 mb-12 flex items-center gap-3">
@@ -46,7 +46,7 @@
       </header>
 
       <!-- Content Canvas -->
-      <div class="mt-12 p-8 overflow-y-auto flex-1 bg-[#0e0e0e]">
+      <div class="mt-12 p-8 flex-1 bg-[#0e0e0e] overflow-visible">
         <!-- Dashboard View -->
         <template v-if="currentView === 'dashboard'">
           <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
@@ -235,7 +235,7 @@
               </div>
               <span class="text-[10px] bg-[#f2ca50]/10 text-[#f2ca50] px-2 py-1 rounded font-bold">{{ data.completed.length }} TODAY</span>
             </div>
-            <div class="space-y-2 overflow-y-auto max-h-[300px] pr-2">
+            <div class="space-y-2 overflow-y-auto pr-2" style="max-height: none;">
               <div v-for="cat in completedCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-visible">
                 <div @click="toggleCategoryCollapse('completed-' + cat.id)" class="flex items-center justify-between p-2 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
                   <div class="flex items-center gap-2">
