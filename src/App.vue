@@ -46,7 +46,7 @@
       </header>
 
       <!-- Content Canvas -->
-      <div class="mt-12 p-8 flex-1 bg-[#0e0e0e] overflow-visible">
+      <div class="mt-12 p-8 flex-1 bg-[#0e0e0e] overflow-y-auto">
         <!-- Dashboard View -->
         <template v-if="currentView === 'dashboard'">
           <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
