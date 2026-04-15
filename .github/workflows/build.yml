@@ -37,16 +37,6 @@ jobs:
             release/*.zip
           retention-days: 7
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release/*.dmg
-            release/*.zip
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-win:
     runs-on: windows-latest
     steps:
@@ -75,12 +65,3 @@ jobs:
           path: |
             release/*.exe
           retention-days: 7
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release/*.exe
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
