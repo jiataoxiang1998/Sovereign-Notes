@@ -16,6 +16,7 @@ export interface Item {
   createdAt: string
   completedAt?: string
   dueDate?: string
+  sourceType?: 'todos' | 'issues'
 }
 
 export interface DayData {
