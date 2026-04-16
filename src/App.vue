@@ -1000,25 +1000,37 @@ const pickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: bo
 const categoryPickerId = ref<string | null>(null)
 
 function generateSummaryText(date: string, d: DayData): string {
-  let text = `${date} Daily Summary\n${'='.repeat(20)}\n\n`
+  const isZh = currentLanguage.value === 'zh'
+  const title = isZh ? '每日总结' : 'Daily Summary'
+  const todoTitle = isZh ? '待办' : 'To-do'
+  const completedTitle = isZh ? '已完成' : 'Completed'
+  const issuesTitle = isZh ? '发现问题' : 'Identified Issues'
+  const blockersTitle = isZh ? '阻塞问题' : 'Blockers'
+  const priorityH = isZh ? '高' : 'H'
+  const priorityM = isZh ? '中' : 'M'
+  const priorityL = isZh ? '低' : 'L'
+  const severityHigh = isZh ? '高' : 'High'
+  const severityMid = isZh ? '中' : 'Mid'
+  const severityLow = isZh ? '低' : 'Low'
+  let text = `${date} ${title}\n${'='.repeat(20)}\n\n`
   if (d.todos?.length) {
-    text += `【To-do】\n`
-    d.todos.forEach(i => text += `- [${i.priority === 'high' ? 'H' : i.priority === 'mid' ? 'M' : 'L'}] ${i.title}\n`)
+    text += `【${todoTitle}】\n`
+    d.todos.forEach(i => text += `- [${i.priority === 'high' ? priorityH : i.priority === 'mid' ? priorityM : priorityL}] ${i.title}\n`)
     text += '\n'
   }
   if (d.completed?.length) {
-    text += `【Completed】\n`
+    text += `【${completedTitle}】\n`
     d.completed.forEach(i => text += `- [Done] ${i.title}\n`)
     text += '\n'
   }
   if (d.issues?.length) {
-    text += `【Identified Issues】\n`
-    d.issues.forEach(i => text += `- [${i.severity === 'high' ? 'High' : i.severity === 'mid' ? 'Mid' : 'Low'}] ${i.title}\n`)
+    text += `【${issuesTitle}】\n`
+    d.issues.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
     text += '\n'
   }
   if (d.blockers?.length) {
-    text += `【Blockers】\n`
-    d.blockers.forEach(i => text += `- [${i.severity === 'high' ? 'High' : i.severity === 'mid' ? 'Mid' : 'Low'}] ${i.title}\n`)
+    text += `【${blockersTitle}】\n`
+    d.blockers.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
   }
   return text
 }
@@ -1475,25 +1487,37 @@ function bulkDelete() {
 
 function generateSummary() {
   const date = currentDate.value
-  let text = `${date} Daily Summary\n${'='.repeat(20)}\n\n`
+  const isZh = currentLanguage.value === 'zh'
+  const title = isZh ? '每日总结' : 'Daily Summary'
+  const todoTitle = isZh ? '待办' : 'To-do'
+  const completedTitle = isZh ? '已完成' : 'Completed'
+  const issuesTitle = isZh ? '发现问题' : 'Identified Issues'
+  const blockersTitle = isZh ? '阻塞问题' : 'Blockers'
+  const priorityH = isZh ? '高' : 'H'
+  const priorityM = isZh ? '中' : 'M'
+  const priorityL = isZh ? '低' : 'L'
+  const severityHigh = isZh ? '高' : 'High'
+  const severityMid = isZh ? '中' : 'Mid'
+  const severityLow = isZh ? '低' : 'Low'
+  let text = `${date} ${title}\n${'='.repeat(20)}\n\n`
   if (data.todos.length) {
-    text += `【To-do】\n`
-    data.todos.forEach(i => text += `- [${i.priority === 'high' ? 'H' : i.priority === 'mid' ? 'M' : 'L'}] ${i.title}\n`)
+    text += `【${todoTitle}】\n`
+    data.todos.forEach(i => text += `- [${i.priority === 'high' ? priorityH : i.priority === 'mid' ? priorityM : priorityL}] ${i.title}\n`)
     text += '\n'
   }
   if (data.completed.length) {
-    text += `【Completed】\n`
+    text += `【${completedTitle}】\n`
     data.completed.forEach(i => text += `- [Done ${i.completedAt?.split('T')[1]?.slice(0, 5)}] ${i.title}\n`)
     text += '\n'
   }
   if (data.issues.length) {
-    text += `【Identified Issues】\n`
-    data.issues.forEach(i => text += `- [${i.severity === 'high' ? 'High' : i.severity === 'mid' ? 'Mid' : 'Low'}] ${i.title}\n`)
+    text += `【${issuesTitle}】\n`
+    data.issues.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
     text += '\n'
   }
   if (data.blockers.length) {
-    text += `【Blockers】\n`
-    data.blockers.forEach(i => text += `- [${i.severity === 'high' ? 'High' : i.severity === 'mid' ? 'Mid' : 'Low'}] ${i.title}\n`)
+    text += `【${blockersTitle}】\n`
+    data.blockers.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
   }
   window.electronAPI.clipboardWrite(text)
 }
