@@ -81,7 +81,6 @@
               <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-3">
                   <span class="text-[#f2ca50] font-['Manrope'] text-xs font-bold uppercase tracking-widest">01. To-do</span>
-                  <h3 class="text-2xl font-bold font-['Manrope']">To-do Items</h3>
                 </div>
                 <button @click="!isReadOnly && openAddModal('todos')" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center hover:bg-[#f2ca50] hover:text-[#3c2f00] transition-all group">
                   <span class="material-symbols-outlined text-sm group-hover:font-bold">add</span>
@@ -227,11 +226,10 @@
           </section>
 
           <!-- Completed Tasks -->
-          <section class="col-span-12 lg:col-span-5 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)] relative">
+<section class="col-span-12 lg:col-span-5 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)] relative">
             <div class="flex justify-between items-center mb-6">
               <div class="flex items-center gap-3">
                 <span class="text-[#f2ca50] font-['Manrope'] text-xs font-bold uppercase tracking-widest">02. Completed</span>
-                <h3 class="text-2xl font-bold font-['Manrope']">Completed</h3>
               </div>
               <span class="text-[10px] bg-[#f2ca50]/10 text-[#f2ca50] px-2 py-1 rounded font-bold">{{ data.completed.length }} TODAY</span>
             </div>
@@ -303,8 +301,7 @@
           <section class="col-span-12 lg:col-span-6 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)]">
             <div class="flex justify-between items-center mb-6">
               <div class="flex items-center gap-3">
-                <span class="text-[#f2ca50] font-['Manrope'] text-xs font-bold uppercase tracking-widest">03. Identified Issues</span>
-                <h3 class="text-2xl font-bold font-['Manrope']">Identified Issues</h3>
+<span class="text-[#f2ca50] font-['Manrope'] text-xs font-bold uppercase tracking-widest">03. Identified Issues</span>
               </div>
             </div>
             <div class="space-y-4">
@@ -402,8 +399,7 @@
           <section class="col-span-12 lg:col-span-6 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)]">
             <div class="flex justify-between items-center mb-6">
               <div class="flex items-center gap-3">
-                <span class="text-[#ffb4ab] font-['Manrope'] text-xs font-bold uppercase tracking-widest">04. Blockers</span>
-                <h3 class="text-2xl font-bold font-['Manrope']">Blockers</h3>
+<span class="text-[#ffb4ab] font-['Manrope'] text-xs font-bold uppercase tracking-widest">04. Blockers</span>
               </div>
               <span class="material-symbols-outlined text-[#ffb4ab]">warning</span>
             </div>
