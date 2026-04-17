@@ -1,37 +1,1711 @@
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import Sidebar from './components/Sidebar.vue'
-import Header from './components/Header.vue'
-import DashboardView from './views/DashboardView.vue'
-import HistoryView from './views/HistoryView.vue'
-import ChatView from './views/ChatView.vue'
-
-const currentView = ref('dashboard')
-
-const currentComponent = computed(() => {
-  switch (currentView.value) {
-    case 'dashboard': return DashboardView
-    case 'history': return HistoryView
-    case 'chat': return ChatView
-    default: return DashboardView
-  }
-})
-
-onMounted(() => {
-  console.log('App mounted')
-})
-</script>
-
 <template>
   <div class="h-screen flex bg-[#131313] text-[#e5e2e1] font-['Inter']">
-    <Sidebar :currentView="currentView" @change="currentView = $event" />
-    
-    <main class="flex-1 flex flex-col overflow-hidden">
-      <Header />
-      
-      <div class="flex-1 overflow-y-auto">
-        <component :is="currentComponent" />
+    <!-- SideNavBar -->
+    <aside class="bg-[#0E0E0E] h-screen w-64 fixed left-0 top-0 flex flex-col py-8 z-50">
+      <div class="px-8 mb-12 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#f2ca50] to-[#b8860b] flex items-center justify-center shadow-lg shadow-[#f2ca50]/20">
+          <svg class="w-5 h-5 text-[#1a1a1a]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold uppercase tracking-widest text-[#D4AF37] font-['Manrope']">Sovereign</h1>
+          <p class="text-[10px] text-[#d0c5af] uppercase tracking-widest mt-1 opacity-60 font-['Manrope']">Work Summary</p>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-2">
+        <a @click="currentView = 'dashboard'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'dashboard'}">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>{{ currentLanguage === 'en' ? 'Dashboard' : '仪表盘' }}</span>
+        </a>
+        <a @click="currentView = 'history'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'history'}">
+          <span class="material-symbols-outlined">history</span>
+          <span>{{ currentLanguage === 'en' ? 'History' : '历史' }}</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="pl-64 h-screen flex flex-col w-full">
+      <!-- TopNavBar -->
+      <header class="h-12 w-full fixed top-0 z-40 bg-[#131313] flex justify-between items-center px-8 font-['Manrope'] font-light border-b border-[#f2ca50]/10" style="-webkit-app-region: drag; position: relative;">
+        <div class="flex items-center" style="-webkit-app-region: no-drag;">
+          <span class="text-[#d0c5af] text-xs tracking-widest uppercase opacity-60">Sovereign Notes</span>
+        </div>
+        <div class="flex items-center gap-3" style="-webkit-app-region: no-drag;">
+          <button @click="toggleLanguage" class="text-xs px-2 py-1 rounded bg-[#2a2a2a] text-[#d0c5af] hover:bg-[#3a3939] transition border border-[#99907c]/30">
+            {{ currentLanguage === 'en' ? '中文' : 'EN' }}
+          </button>
+          <button @click="minimize" class="w-10 h-8 flex items-center justify-center hover:bg-[#2a2a2a] rounded transition" title="Minimize">
+            <svg class="w-4 h-4 text-[#d0c5af]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+          </button>
+          <button @click="maximize" class="w-10 h-8 flex items-center justify-center hover:bg-[#2a2a2a] rounded transition" title="Maximize">
+            <svg class="w-4 h-4 text-[#d0c5af]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5 5m11 1l-5-5m-4 0h4m-4 0l-5-5"/></svg>
+          </button>
+          <button @click="close" class="w-10 h-8 flex items-center justify-center hover:bg-[#93000a] rounded transition" title="{{ currentLanguage === 'en' ? 'Close' : '关闭' }}">
+            <svg class="w-4 h-4 text-[#d0c5af] hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Canvas -->
+      <div class="mt-12 p-8 flex-1 bg-[#0e0e0e] overflow-y-auto">
+        <!-- Dashboard View -->
+        <template v-if="currentView === 'dashboard'">
+          <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+            <span class="material-symbols-outlined text-[#4ade80]">check_circle</span>
+            <span class="text-[#4ade80] text-sm">Copied</span>
+          </div>
+          <!-- Page Header -->
+          <div class="flex justify-between items-end mb-12">
+            <div>
+              <h2 class="text-5xl font-extrabold font-['Manrope'] tracking-tighter text-[#e5e2e1] mb-2">
+                {{ currentLanguage === 'en' ? 'Daily Summary' : '每日总结' }}
+                <span v-if="isReadOnly" class="text-sm text-[#99907c] ml-2 font-normal">({{ currentLanguage === 'en' ? 'Read-only' : '只读' }})</span>
+              </h2>
+              <p class="text-[#d0c5af] font-['Inter']">{{ currentLanguage === 'en' ? 'Refine your daily output and generate automated work logs.' : '优化您的每日工作输出并生成自动化工作日志。' }}</p>
+            </div>
+            <div class="flex gap-4">
+              <button @click="openSummaryModal" class="px-8 py-2.5 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold shadow-[0_0_15px_rgba(242,202,80,0.1)] hover:brightness-110 transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                {{ currentLanguage === 'en' ? 'Generate Summary' : '生成总结' }}
+              </button>
+              <button @click="showCategoryModal = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">folder</span>
+                {{ currentLanguage === 'en' ? 'Category Management' : '类别管理' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bento Grid Layout -->
+          <div class="grid grid-cols-12 gap-6 pb-12">
+            <!-- To-do Items -->
+            <section class="col-span-12 lg:col-span-7 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)] relative overflow-visible min-h-[400px]">
+              <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                  <span class="font-['Manrope'] text-xs font-bold uppercase tracking-widest text-[#f2ca50]">{{ currentLanguage === 'en' ? '01. To-do' : '01. 待办' }}</span>
+                </div>
+                <button @click="!isReadOnly && openAddModal('todos')" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center hover:bg-[#f2ca50] hover:text-[#3c2f00] transition-all group">
+                  <span class="material-symbols-outlined text-sm group-hover:font-bold">add</span>
+                </button>
+            </div>
+            <div class="space-y-3">
+              <div v-for="cat in todoCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-visible">
+                <div @click="toggleCategoryCollapse(cat.id)" class="flex items-center justify-between p-3 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#f2ca50]">
+                      {{ collapsedCategories.has(cat.id) ? 'chevron_right' : 'expand_more' }}
+                    </span>
+                    <span class="text-[#e5e2e1] font-medium">{{ cat.name }}</span>
+                    <span class="text-xs text-[#99907c]">({{ cat.items.length }})</span>
+                  </div>
+                  <button @click.stop="openAddModalWithCategory('todos', cat.id)" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50] text-sm">add</button>
+                </div>
+                <div v-show="!collapsedCategories.has(cat.id)" class="border-t border-[#99907c]/10">
+                  <div v-for="(item, index) in cat.items" :key="item.id" draggable="true" @dragstart="onDragStart('todos', item)" @dragover.prevent="onDragOver('todos', index)" @drop="onDrop('todos', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'todos' && dragOverIndex?.index === index}" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer border-b border-[#99907c]/5 last:border-b-0">
+                    <div class="flex items-center gap-4">
+                      <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
+                      </div>
+                      <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                      <button
+                        @click.stop="!isReadOnly && togglePriority(item)"
+                        :disabled="isReadOnly"
+                        class="text-xs px-2 py-0.5 rounded transition-all"
+                        :class="[
+                          isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                          item.priority === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                          item.priority === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                          item.priority === 'low' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                          'bg-[#99907c]/10 text-[#99907c]'
+                        ]"
+                      >{{ !item.priority ? '+' : item.priority === 'high' ? 'H' : item.priority === 'mid' ? 'M' : 'L' }}</button>
+                      <div class="relative">
+<button v-if="item.dueDate" @click.stop="!isReadOnly && (dueDatePickerId = dueDatePickerId === item.id ? null : item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#f2ca50]/20 text-[#f2ca50] flex items-center gap-1 hover:bg-[#f2ca50]/30">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                          {{ item.dueDate }}
+                        </button>
+<button v-else @click.stop="!isReadOnly && (dueDatePickerId = dueDatePickerId === item.id ? null : item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                        </button>
+                        <div v-if="dueDatePickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[180px]" @click.stop>
+                          <div class="flex justify-between items-center mb-2">
+                            <button @click.stop="changePickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                            <span class="text-xs text-[#f2ca50]">{{ pickerYear }} {{ pickerMonth }}</span>
+                            <button @click.stop="changePickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+                          </div>
+                          <div class="grid grid-cols-7 gap-1 mb-1">
+                            <span v-for="w in (currentLanguage === 'en' ? ['S','M','T','W','T','F','S'] : ['日','一','二','三','四','五','六'])" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                          </div>
+                          <div class="grid grid-cols-7 gap-1">
+                            <button v-for="d in pickerDays" :key="d.date" @click.stop="!isReadOnly && confirmDueDate(item, d.date)" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+                          </div>
+                          <button @click.stop="!isReadOnly && (delete item.dueDate, saveData(), dueDatePickerId = null)" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">{{ currentLanguage === 'en' ? 'Clear' : '清除' }}</button>
+                          <button @click.stop="dueDatePickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                        </div>
+                      </div>
+                      <div class="relative">
+                        <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                          <span class="material-symbols-outlined text-[10px]">folder</span>
+                        </button>
+                        <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                          <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                          <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                            <button v-for="cat in categories" :key="cat.id" @click.stop="!isReadOnly && (item.category = cat.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat.name }}</button>
+                          </div>
+                          <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                        </div>
+                      </div>
+                    </div>
+                    <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                      delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-for="(item, index) in uncategorizedTodos" :key="item.id" draggable="true" @dragstart="onDragStart('todos', item)" @dragover.prevent="onDragOver('todos', index)" @drop="onDrop('todos', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'todos' && dragOverIndex?.index === index}" class="flex items-center justify-between p-4 rounded-lg bg-[#2a2a2a]/50 hover:bg-[#3a3939] group transition-all cursor-pointer">
+                <div class="flex items-center gap-4">
+                  <div @click="!isReadOnly && toggleComplete(item.id)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
+                  </div>
+                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] font-medium px-2 py-1 rounded w-full outline-none border border-[#f2ca50]" autofocus ref="editInput" /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] font-medium cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                  <button
+                    @click.stop="!isReadOnly && togglePriority(item)"
+                    :disabled="isReadOnly"
+                    class="text-xs px-2 py-0.5 rounded transition-all"
+                    :class="[
+                      isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                      item.priority === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                      item.priority === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                      item.priority === 'low' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                      'bg-[#99907c]/10 text-[#99907c]'
+                    ]"
+                  >{{ !item.priority ? '+' : item.priority === 'high' ? 'H' : item.priority === 'mid' ? 'M' : 'L' }}</button>
+                  <div class="relative">
+<button v-if="item.dueDate" @click.stop="!isReadOnly && (dueDatePickerId = dueDatePickerId === item.id ? null : item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#f2ca50]/20 text-[#f2ca50] flex items-center gap-1 hover:bg-[#f2ca50]/30">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                          {{ item.dueDate }}
+                        </button>
+                        <button v-else @click.stop="!isReadOnly && (dueDatePickerId = dueDatePickerId === item.id ? null : item.id, initPicker(item))" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                          <span class="material-symbols-outlined text-[10px]">schedule</span>
+                        </button>
+                    <div v-if="dueDatePickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[180px]" @click.stop>
+                      <div class="flex justify-between items-center mb-2">
+                        <button @click.stop="changePickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                        <span class="text-xs text-[#f2ca50]">{{ pickerYear }} {{ pickerMonth }}</span>
+                        <button @click.stop="changePickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+                      </div>
+                      <div class="grid grid-cols-7 gap-1 mb-1">
+                        <span v-for="w in (currentLanguage === 'en' ? ['S','M','T','W','T','F','S'] : ['日','一','二','三','四','五','六'])" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                      </div>
+                      <div class="grid grid-cols-7 gap-1">
+                        <button v-for="d in pickerDays" :key="d.date" @click.stop="!isReadOnly && confirmDueDate(item, d.date)" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+                      </div>
+                      <button @click.stop="!isReadOnly && (delete item.dueDate, saveData(), dueDatePickerId = null)" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">{{ currentLanguage === 'en' ? 'Clear' : '清除' }}</button>
+                      <button @click.stop="dueDatePickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                    </div>
+                  </div>
+                  <div class="relative">
+                    <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                      <span class="material-symbols-outlined text-[10px]">folder</span>
+                    </button>
+                    <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                      <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                      <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                        <button v-for="cat in categories" :key="cat.id" @click.stop="!isReadOnly && (item.category = cat.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat.name }}</button>
+                      </div>
+                      <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                    </div>
+                  </div>
+                </div>
+                <button @click.stop="!isReadOnly && deleteItem('todos', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                  delete
+                </button>
+              </div>
+              <button v-if="!isReadOnly" @click="openAddModal('todos')" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#f2ca50] hover:text-[#f2ca50] transition">
+                {{ currentLanguage === 'en' ? '+ Add To-do' : '+ 添加待办' }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Completed Tasks -->
+<section class="col-span-12 lg:col-span-5 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)] relative">
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+                <span class="font-['Manrope'] text-xs font-bold uppercase tracking-widest text-[#f2ca50]">{{ currentLanguage === 'en' ? '02. Completed' : '02. 已完成' }}</span>
+              </div>
+              <span class="text-[10px] bg-[#f2ca50]/10 text-[#f2ca50] px-2 py-1 rounded font-bold">{{ data.completed.length }} {{ currentLanguage === 'en' ? 'TODAY' : '今天' }}</span>
+            </div>
+            <div class="space-y-2 overflow-y-auto pr-2" style="max-height: none;">
+              <div v-for="cat in completedCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-visible">
+                <div @click="toggleCategoryCollapse('completed-' + cat.id)" class="flex items-center justify-between p-2 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#f2ca50]">
+                      {{ collapsedCategories.has('completed-' + cat.id) ? 'chevron_right' : 'expand_more' }}
+                    </span>
+                    <span class="text-[#e5e2e1] font-medium text-sm">{{ cat.name }}</span>
+                    <span class="text-xs text-[#99907c]">({{ cat.items.length }})</span>
+                  </div>
+                  <button @click.stop="openAddModalWithCategory('completed', cat.id)" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50] text-sm">add</button>
+                </div>
+                <div v-show="!collapsedCategories.has('completed-' + cat.id)" class="border-t border-[#99907c]/10">
+                  <div v-for="(item, index) in cat.items" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
+                    <button @click="!isReadOnly && moveToTodo(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="material-symbols-outlined text-[#f2ca50] text-sm hover:text-[#4ade80] transition-all">check_circle</button>
+                    <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                    <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
+                    <div class="relative">
+                      <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                        <span class="material-symbols-outlined text-[10px]">folder</span>
+                      </button>
+                      <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                        <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                        <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                          <button v-for="cat2 in categories" :key="cat2.id" @click.stop="!isReadOnly && (item.category = cat2.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat2.name }}</button>
+                        </div>
+                        <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                      </div>
+                    </div>
+                    <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                      delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-for="(item, index) in uncategorizedCompleted" :key="item.id" draggable="true" @dragstart="onDragStart('completed', item)" @dragover.prevent="onDragOver('completed', index)" @drop="onDrop('completed', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'completed' && dragOverIndex?.index === index}" class="flex items-center gap-4 p-3 rounded-lg bg-[#1c1b1b]/40 border-l-2 border-[#f2ca50] group">
+                <button @click="!isReadOnly && moveToTodo(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="material-symbols-outlined text-[#f2ca50] text-sm hover:text-[#4ade80] transition-all">check_circle</button>
+                <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-sm text-[#d0c5af] line-through decoration-[#f2ca50]/40 flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                <span class="text-xs text-[#d0c5af]">{{ item.completedAt?.split('T')[1]?.slice(0, 5) }}</span>
+                <div class="relative">
+                  <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                    <span class="material-symbols-outlined text-[10px]">folder</span>
+                  </button>
+                  <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                    <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                    <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                      <button v-for="cat in categories" :key="cat.id" @click.stop="!isReadOnly && (item.category = cat.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat.name }}</button>
+                    </div>
+                    <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                  </div>
+                </div>
+                <button @click.stop="!isReadOnly && deleteItem('completed', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                  delete
+                </button>
+              </div>
+              <button v-if="!isReadOnly" @click="openAddModal('completed')" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#f2ca50] hover:text-[#f2ca50] transition">
+                {{ currentLanguage === 'en' ? '+ Add Completed' : '+ 添加已完成' }}
+              </button>
+              <div v-if="!completedCategories.length && !uncategorizedCompleted.length" class="flex items-center justify-center py-8 text-[#d0c5af]">
+                {{ currentLanguage === 'en' ? 'No completed items' : '暂无已完成项目' }}
+              </div>
+            </div>
+          </section>
+
+          <!-- Identified Issues -->
+          <section class="col-span-12 lg:col-span-6 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)]">
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+<span class="font-['Manrope'] text-xs font-bold uppercase tracking-widest text-[#f2ca50]">{{ currentLanguage === 'en' ? '03. Identified Issues' : '03. 发现问题' }}</span>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div v-for="cat in issueCategories" :key="cat.id" class="rounded-lg border border-[#99907c]/20 overflow-visible">
+                <div @click="toggleCategoryCollapse('issues-' + cat.id)" class="flex items-center justify-between p-2 bg-[#2a2a2a]/50 cursor-pointer hover:bg-[#3a3939]">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-[#f2ca50]">
+                      {{ collapsedCategories.has('issues-' + cat.id) ? 'chevron_right' : 'expand_more' }}
+                    </span>
+                    <span class="text-[#e5e2e1] font-medium text-sm">{{ cat.name }}</span>
+                    <span class="text-xs text-[#99907c]">({{ cat.items.length }})</span>
+                  </div>
+                  <button @click.stop="openAddModalWithCategory('issues', cat.id)" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50] text-sm">add</button>
+                </div>
+                <div v-show="!collapsedCategories.has('issues-' + cat.id)" class="border-t border-[#99907c]/10">
+                  <div v-for="(item, index) in cat.items" :key="item.id" draggable="true" @dragstart="onDragStart('issues', item)" @dragover.prevent="onDragOver('issues', index)" @drop="onDrop('issues', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'issues' && dragOverIndex?.index === index}" class="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a]/50 group border-b border-[#99907c]/5 last:border-b-0">
+                    <div class="flex items-center gap-3">
+                      <div @click="!isReadOnly && markIssueComplete(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
+                      </div>
+                      <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                      <button
+                        @click.stop="!isReadOnly && toggleSeverity(item)"
+                        :disabled="isReadOnly"
+                        class="text-xs px-2 py-0.5 rounded transition-all"
+                        :class="[
+                          isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                          item.severity === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                          item.severity === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                          item.severity === 'low' ? 'bg-[#ffe066]/20 text-[#ffe066]' :
+                          'bg-[#99907c]/10 text-[#99907c]'
+                        ]"
+                      >{{ !item.severity ? '+' : item.severity === 'high' ? 'High' : item.severity === 'mid' ? 'Mid' : 'Low' }}</button>
+                      <div class="relative">
+                        <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                          <span class="material-symbols-outlined text-[10px]">folder</span>
+                        </button>
+                        <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                          <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                          <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                            <button v-for="cat2 in categories" :key="cat2.id" @click.stop="!isReadOnly && (item.category = cat2.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat2.name }}</button>
+                          </div>
+                          <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                        </div>
+                      </div>
+                    </div>
+                    <button @click.stop="!isReadOnly && deleteItem('issues', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                      delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-for="(item, index) in uncategorizedIssues" :key="item.id" draggable="true" @dragstart="onDragStart('issues', item)" @dragover.prevent="onDragOver('issues', index)" @drop="onDrop('issues', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'issues' && dragOverIndex?.index === index}" class="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a]/50 group">
+                <div class="flex items-center gap-3">
+                  <div @click="!isReadOnly && markIssueComplete(item)" :class="isReadOnly ? 'opacity-50 cursor-not-allowed' : ''" class="w-5 h-5 rounded border-2 border-[#99907c]/50 flex items-center justify-center group-hover:border-[#f2ca50] transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[12px] text-[#f2ca50] opacity-0 group-hover:opacity-100">check</span>
+                  </div>
+                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#e5e2e1] flex-1 px-2 py-1 rounded outline-none border border-[#f2ca50]" autofocus /><span v-else @click="startEdit(item)" class="text-[#e5e2e1] flex-1 cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</span>
+                  <button
+                    @click.stop="!isReadOnly && toggleSeverity(item)"
+                    :disabled="isReadOnly"
+                    class="text-xs px-2 py-0.5 rounded transition-all"
+                    :class="[
+                      isReadOnly ? 'opacity-50 cursor-not-allowed' : '',
+                      item.severity === 'high' ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' :
+                      item.severity === 'mid' ? 'bg-[#ffb84d]/20 text-[#ffb84d]' :
+                      item.severity === 'low' ? 'bg-[#ffe066]/20 text-[#ffe066]' :
+                      'bg-[#99907c]/10 text-[#99907c]'
+                    ]"
+                  >{{ !item.severity ? '+' : item.severity === 'high' ? 'High' : item.severity === 'mid' ? 'Mid' : 'Low' }}</button>
+                  <div class="relative">
+                    <button @click.stop="!isReadOnly && (categoryPickerId = categoryPickerId === item.id ? null : item.id)" :class="isReadOnly ? 'pointer-events-none' : ''" class="text-xs px-2 py-0.5 rounded bg-[#99907c]/10 text-[#99907c] flex items-center gap-1 hover:bg-[#99907c]/20">
+                      <span class="material-symbols-outlined text-[10px]">folder</span>
+                    </button>
+                    <div v-if="categoryPickerId === item.id" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[150px]" @click.stop>
+                      <button v-if="item.category" @click.stop="!isReadOnly && (delete item.category, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded mb-1">{{ currentLanguage === 'en' ? 'Remove category' : '移除分类' }}</button>
+                      <div v-if="categories.length" class="max-h-[120px] overflow-y-auto">
+                        <button v-for="cat2 in categories" :key="cat2.id" @click.stop="!isReadOnly && (item.category = cat2.id, saveData(), categoryPickerId = null)" class="w-full text-xs text-[#e5e2e1] hover:bg-[#3a3939] py-1 rounded text-left px-2">{{ cat2.name }}</button>
+                      </div>
+                      <button @click.stop="categoryPickerId = null" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+                    </div>
+                  </div>
+                </div>
+                <button @click.stop="!isReadOnly && deleteItem('issues', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] transition-all">
+                  delete
+                </button>
+              </div>
+              <button @click="!isReadOnly && openAddModal('issues')" :class="isReadOnly ? 'hidden' : ''" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-all uppercase tracking-widest">
+                {{ currentLanguage === 'en' ? '+ Add Issue' : '+ 添加问题' }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Unresolved Blockers -->
+          <section class="col-span-12 lg:col-span-6 bg-[#201f1f] p-8 rounded-xl border-[0.5px_rgba(153,144,124,0.2)]">
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-3">
+<span class="font-['Manrope'] text-xs font-bold uppercase tracking-widest text-[#ffb4ab]">{{ currentLanguage === 'en' ? '04. Blockers' : '04. 无法解决的问题' }}</span>
+              </div>
+              <span class="material-symbols-outlined text-[#ffb4ab]">warning</span>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div v-for="(item, index) in data.blockers" :key="item.id" draggable="true" @dragstart="onDragStart('blockers', item)" @dragover.prevent="onDragOver('blockers', index)" @drop="onDrop('blockers', index)" @dragend="onDragEnd" :class="{'opacity-50': draggedItem?.item.id === item.id, 'border-t-2 border-[#f2ca50]': dragOverIndex?.type === 'blockers' && dragOverIndex?.index === index}" class="flex items-center justify-between bg-[#93000a]/20 p-3 rounded-lg border-l-4 border-[#ffb4ab]">
+                <div class="flex items-center gap-3 flex-1">
+                  <input v-if="editingId === item.id" v-model="editingTitle" @blur="saveEdit(item.id)" @keyup.enter="saveEdit(item.id)" class="bg-[#3a3939] text-[#ffdad6] font-bold text-sm px-2 py-1 rounded outline-none border border-[#ffb4ab]" autofocus /><h4 v-else @click="startEdit(item)" class="text-[#ffdad6] font-bold text-sm cursor-pointer hover:text-[#f2ca50]">{{ item.title }}</h4>
+                  <span class="text-[10px] font-bold text-[#ffb4ab]">CRITICAL</span>
+                </div>
+                <button @click.stop="!isReadOnly && deleteItem('blockers', item.id)" :class="isReadOnly ? 'hidden' : ''" class="material-symbols-outlined text-xs text-[#d0c5af] hover:text-[#ffb4ab] transition-all">delete</button>
+              </div>
+              <button @click="!isReadOnly && openAddModal('blockers')" :class="isReadOnly ? 'hidden' : ''" class="w-full py-2 border border-dashed border-[#99907c]/30 rounded-lg text-xs font-bold text-[#d0c5af] hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-all uppercase tracking-widest">
+                {{ currentLanguage === 'en' ? 'Report New Blocker' : '报告新阻塞' }}
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <!-- Contextual Insight Footer -->
+        <div class="mt-8 flex gap-6 items-center">
+          <div class="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#99907c]/20 to-transparent"></div>
+          <div class="flex items-center gap-2 text-[#d0c5af] text-[10px] uppercase tracking-[0.2em] font-['Manrope']">
+            <span class="material-symbols-outlined text-xs">history_toggle_off</span>
+            {{ currentLanguage === 'en' ? 'Last synced just now' : '刚刚同步' }}
+          </div>
+          <div class="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#99907c]/20 to-transparent"></div>
+        </div>
+        </template>
+
+        <!-- History View -->
+        <template v-if="currentView === 'history'">
+          <section class="mb-16">
+            <div class="flex justify-between items-start">
+              <div>
+                <h1 class="text-5xl font-extrabold font-['Manrope'] tracking-tighter text-[#e5e2e1] mb-4">{{ currentLanguage === 'en' ? 'Historical Archives' : '历史档案' }}</h1>
+                <p class="text-[#d0c5af] max-w-xl text-lg font-light leading-relaxed">{{ currentLanguage === 'en' ? 'Review your journey of productivity. Every summary is a testament to your discipline.' : '回顾您的生产力历程。每份总结都是您自律的见证。' }}</p>
+              </div>
+              <div class="flex gap-3">
+                <button @click="showImportHelp = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">help</span>
+                  {{ currentLanguage === 'en' ? 'Import Help' : '导入帮助' }}
+                </button>
+                <button @click="showCategoryModal = true" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">folder</span>
+                  {{ currentLanguage === 'en' ? 'Category Management' : '类别管理' }}
+                </button>
+                <button @click="exportData" class="px-4 py-2 rounded-md border border-[#99907c]/40 text-[#d0c5af] text-sm font-semibold hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">download</span>
+                  {{ currentLanguage === 'en' ? 'Export Data' : '导出数据' }}
+                </button>
+                <label class="px-4 py-2 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition-all flex items-center gap-2 cursor-pointer">
+                  <span class="material-symbols-outlined text-sm">upload</span>
+                  {{ currentLanguage === 'en' ? 'Import Data' : '导入数据' }}
+                  <input type="file" accept=".json" class="hidden" @change="importData"/>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <div v-if="copySuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+            <span class="material-symbols-outlined text-[#4ade80]">check_circle</span>
+            <span class="text-[#4ade80] text-sm">Copied</span>
+          </div>
+
+          <div class="flex flex-wrap justify-between items-end mb-12 gap-6">
+            <div class="flex gap-4">
+              <div class="flex flex-col space-y-2">
+                <span class="text-[10px] uppercase tracking-widest text-[#f2ca50] font-bold">{{ currentLanguage === 'en' ? 'Timeframe' : '时间范围' }}</span>
+                <div class="flex bg-[#201f1f] rounded-md p-1 border border-[rgba(153,144,124,0.2)]">
+                  <button @click="timeframe = 'all'" :class="timeframe === 'all' ? 'bg-[#3a3939] text-[#f2ca50]' : 'hover:bg-[#3a3939]/50'" class="px-4 py-1.5 text-xs rounded transition-all">{{ currentLanguage === 'en' ? 'All Time' : '全部' }}</button>
+                  <button @click="timeframe = 'month'" :class="timeframe === 'month' ? 'bg-[#3a3939] text-[#f2ca50]' : 'hover:bg-[#3a3939]/50'" class="px-4 py-1.5 text-xs rounded transition-all">{{ currentLanguage === 'en' ? 'This Month' : '本月' }}</button>
+                  <button @click="timeframe = 'week'" :class="timeframe === 'week' ? 'bg-[#3a3939] text-[#f2ca50]' : 'hover:bg-[#3a3939]/50'" class="px-4 py-1.5 text-xs rounded transition-all">{{ currentLanguage === 'en' ? 'Last 7 Days' : '最近7天' }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-8 space-y-6">
+              <article v-for="date in filteredDates.slice(0, 5)" :key="date" class="bg-[#201f1f] p-8 rounded-xl border border-[rgba(153,144,124,0.2)] relative overflow-hidden group cursor-pointer" @click="showHistoryModal(date)">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#f2ca50] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <span class="text-[10px] uppercase tracking-widest text-[#f2ca50] font-bold mb-1 block">{{ formatDateFull(date) }}</span>
+                    <h3 class="text-2xl font-bold font-['Manrope']">{{ currentLanguage === 'en' ? 'Daily Summary' : '每日总结' }}</h3>
+                  </div>
+                  <div class="flex gap-2">
+                    <button @click.stop="copyHistorySummaryByDate(date)" class="w-10 h-10 flex items-center justify-center bg-[#2a2a2a] rounded-lg hover:text-[#f2ca50] transition-colors border border-[rgba(153,144,124,0.2)]" title="Copy Summary">
+                      <span class="material-symbols-outlined">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-[10px] uppercase text-[#d0c5af] font-bold mb-2 tracking-tighter">{{ currentLanguage === 'en' ? 'Summary' : '摘要' }}</p>
+                    <ul class="space-y-2 text-sm text-[#e5e2e1]/90">
+                      <li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ getItemCount(date).todos }} {{ currentLanguage === 'en' ? 'Tasks' : '任务' }}</li>
+                      <li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ getItemCount(date).completed }} {{ currentLanguage === 'en' ? 'Completed' : '已完成' }}</li>
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div class="lg:col-span-4 space-y-8">
+              <div class="bg-[#201f1f] p-6 rounded-xl border border-[rgba(153,144,124,0.2)]">
+                <div class="flex justify-between items-center mb-6">
+                  <h5 class="font-bold text-sm uppercase tracking-widest text-[#f2ca50]">{{ displayMonth }}</h5>
+                  <div class="flex gap-2">
+                    <button @click="changeMonth(-1)" class="material-symbols-outlined text-sm">chevron_left</button>
+                    <button @click="changeMonth(1)" class="material-symbols-outlined text-sm">chevron_right</button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center text-[10px] text-[#d0c5af] mb-4">
+                  <span>{{ currentLanguage === 'en' ? 'S' : '日' }}</span><span>{{ currentLanguage === 'en' ? 'M' : '一' }}</span><span>{{ currentLanguage === 'en' ? 'T' : '二' }}</span><span>{{ currentLanguage === 'en' ? 'W' : '三' }}</span><span>{{ currentLanguage === 'en' ? 'T' : '四' }}</span><span>{{ currentLanguage === 'en' ? 'F' : '五' }}</span><span>{{ currentLanguage === 'en' ? 'S' : '六' }}</span>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center">
+                  <template v-for="day in calendarDays" :key="day.date">
+                    <button v-if="day.day > 0" @click="day.hasData && showHistoryModal(day.date)" class="text-xs py-2 rounded transition" :class="{'bg-[#f2ca50]/40 text-[#f2ca50] font-bold': day.date === currentDate, 'text-[#f2ca50]': day.hasData && day.date !== currentDate, 'text-[#99907c] opacity-40': !day.hasData}" :disabled="!day.hasData">{{ day.day }}</button>
+                    <span v-else class="text-xs"></span>
+                  </template>
+                </div>
+              </div>
+
+              <div class="bg-[#201f1f] p-6 rounded-xl border border-[rgba(153,144,124,0.2)]">
+                <p class="text-[10px] uppercase text-[#f2ca50] font-bold mb-4 tracking-widest">{{ currentLanguage === 'en' ? 'Monthly Stats' : '月度统计' }}</p>
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-3xl font-extrabold">{{ filteredDates.length }} <span class="text-sm font-light text-[#d0c5af]">{{ currentLanguage === 'en' ? 'days' : '天' }}</span></p>
+                    <p class="text-xs text-[#d0c5af] mt-1">{{ currentLanguage === 'en' ? 'Total Entries' : '总记录数' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </main>
+
+    <!-- Add Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showAddModal = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-6 w-96">
+        <h3 class="text-lg font-bold mb-4 text-[#f2ca50] font-['Manrope']">
+          {{ addType === 'todos' ? (currentLanguage === 'en' ? 'Add To-do' : '添加待办') : addType === 'completed' ? (currentLanguage === 'en' ? 'Add Completed' : '添加已完成') : addType === 'issues' ? (currentLanguage === 'en' ? 'Add Issue' : '添加问题') : (currentLanguage === 'en' ? 'Add Blocker' : '添加阻塞') }}
+        </h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Title' : '标题' }}</label>
+            <input v-model="addTitle" type="text" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border-none outline-none focus:ring-1 focus:ring-[#f2ca50]" :placeholder="currentLanguage === 'en' ? 'Enter title...' : '输入标题...'" @keyup.enter="submitAdd"/>
+          </div>
+          <div v-if="addType === 'todos'">
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Priority' : '优先级' }}</label>
+            <div class="flex gap-2">
+              <button v-for="p in priorities" :key="p.value" @click="addPriority = p.value" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === p.value ? `bg-${p.color}/20 border-${p.color} text-${p.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ p.label }}</button>
+            </div>
+          </div>
+          <div v-if="addType === 'todos'" class="relative">
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Due Date (Optional)' : '截止日期（可选）' }}</label>
+            <button @click="toggleAddPicker" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#f2ca50]/30 text-left hover:border-[#f2ca50] transition">
+              {{ addDueDate || 'Click to select date...' }}
+            </button>
+            <div v-if="showAddPicker" class="absolute top-full left-0 mt-1 z-50 bg-[#201f1f] border border-[#f2ca50] rounded-lg p-2 min-w-[200px]" @click.stop>
+              <div class="flex justify-between items-center mb-2">
+                <button @click.stop="changeAddPickerMonth(-1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">‹</button>
+                <span class="text-xs text-[#f2ca50]">{{ addPickerYear }} {{ addPickerMonth }}</span>
+                <button @click.stop="changeAddPickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
+              </div>
+              <div class="grid grid-cols-7 gap-1 mb-1">
+                <span v-for="w in (currentLanguage === 'en' ? ['S','M','T','W','T','F','S'] : ['日','一','二','三','四','五','六'])" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+              </div>
+              <div class="grid grid-cols-7 gap-1">
+                <button v-for="d in addPickerDays" :key="d.date" @click.stop="addDueDate = d.date; showAddPicker = false" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
+              </div>
+              <button @click.stop="addDueDate = ''" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">{{ currentLanguage === 'en' ? 'Clear' : '清除' }}</button>
+              <button @click.stop="showAddPicker = false" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+            </div>
+          </div>
+          <div v-if="addType === 'todos' || addType === 'completed' || addType === 'issues'">
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Category (Optional)' : '类别（可选）' }}</label>
+            <select v-model="addCategoryId" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#99907c]/30 focus:border-[#f2ca50] outline-none">
+              <option value="">{{ currentLanguage === 'en' ? 'No category' : '不选择类别' }}</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div v-if="addType === 'issues'">
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Severity' : '严重程度' }}</label>
+            <div class="flex gap-2">
+              <button v-for="s in severities" :key="s.value" @click="addSeverity = s.value" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === s.value ? `bg-${s.color}/20 border-${s.color} text-${s.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ s.label }}</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button @click="showAddModal = false" class="flex-1 py-2 border border-[#99907c] text-[#d0c5af] rounded-lg hover:border-[#f2ca50] transition">{{ currentLanguage === 'en' ? 'Cancel' : '取消' }}</button>
+          <button @click="submitAdd" class="flex-1 py-2 bg-[#f2ca50] text-[#3c2f00] font-bold rounded-lg hover:brightness-110 transition">{{ currentLanguage === 'en' ? 'Add' : '添加' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Detail Modal -->
+    <div v-if="showHistoryModalFlag && historyModalData" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showHistoryModalFlag = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-8 w-[600px] max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-[#f2ca50] font-bold">{{ formatDateFull(historyModalData.date) }}</span>
+            <h3 class="text-2xl font-bold font-['Manrope'] mt-1">{{ currentLanguage === 'en' ? 'Daily Summary' : '每日总结' }}{{ currentLanguage === 'en' ? ' (Read-only)' : '（只读）' }}</h3>
+          </div>
+          <button @click="showHistoryModalFlag = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+
+        <div class="mb-6">
+          <button @click="showHistorySummaryTab = 'detail'" :class="showHistorySummaryTab === 'detail' ? 'bg-[#f2ca50] text-[#3c2f00]' : 'text-[#d0c5af] bg-[#2a2a2a]'" class="px-4 py-2 rounded-l-lg text-sm font-bold transition-colors">{{ currentLanguage === 'en' ? 'Detail' : '详情' }}</button>
+          <button @click="showHistorySummaryTab = 'text'" :class="showHistorySummaryTab === 'text' ? 'bg-[#f2ca50] text-[#3c2f00]' : 'text-[#d0c5af] bg-[#2a2a2a]'" class="px-4 py-2 rounded-r-lg text-sm font-bold transition-colors">{{ currentLanguage === 'en' ? 'Summary' : '摘要' }}</button>
+        </div>
+
+        <!-- Detail View -->
+        <div v-if="showHistorySummaryTab === 'detail'" class="space-y-6">
+          <div v-if="historyModalData.todos?.length">
+            <h4 class="text-sm font-bold text-[#f2ca50] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'To-do' : '待办' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in historyModalData.todos" :key="item.id" class="p-3 rounded bg-[#2a2a2a]/50 flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full" :class="{
+                  'bg-[#ffb4ab]': item.priority === 'high',
+                  'bg-[#ffb84d]': item.priority === 'mid',
+                  'bg-[#4ade80]': item.priority === 'low'
+                }"></span>
+                <span class="text-[#e5e2e1]">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="historyModalData.completed?.length">
+            <h4 class="text-sm font-bold text-[#4ade80] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Completed' : '已完成' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in historyModalData.completed" :key="item.id" class="p-3 rounded bg-[#1c1b1b]/40 border-l-2 border-[#4ade80] flex items-center gap-3">
+                <span class="material-symbols-outlined text-[#4ade80] text-sm">check_circle</span>
+                <span class="text-[#d0c5af] line-through">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="historyModalData.issues?.length">
+            <h4 class="text-sm font-bold text-[#ffe066] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Identified Issues' : '发现问题' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in historyModalData.issues" :key="item.id" class="p-3 rounded bg-[#2a2a2a]/50 flex items-center justify-between">
+                <span class="text-[#e5e2e1]">{{ item.title }}</span>
+                <span class="text-xs px-2 py-0.5 rounded" :class="{
+                  'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.severity === 'high',
+                  'bg-[#ffb84d]/20 text-[#ffb84d]': item.severity === 'mid',
+                  'bg-[#ffe066]/20 text-[#ffe066]': item.severity === 'low'
+                }">{{ item.severity === 'high' ? 'High' : item.severity === 'mid' ? 'Mid' : 'Low' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="historyModalData.blockers?.length">
+            <h4 class="text-sm font-bold text-[#ffb4ab] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Blockers' : '阻塞问题' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in historyModalData.blockers" :key="item.id" class="p-3 rounded bg-[#93000a]/20 border-l-4 border-[#ffb4ab]">
+                <span class="text-[#ffdad6] font-bold">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Text View -->
+        <div v-if="showHistorySummaryTab === 'text'" class="bg-[#2a2a2a] rounded-lg p-4">
+          <pre class="text-sm text-[#e5e2e1] whitespace-pre-wrap font-mono">{{ generateSummaryText(historyModalData.date, historyModalData) }}</pre>
+        </div>
+        
+        <div class="flex justify-end mt-8 gap-4">
+          <div v-if="copySuccess" class="flex items-center gap-2 text-[#4ade80]">
+            <span class="material-symbols-outlined text-sm">check_circle</span>
+            <span class="text-sm">Copied</span>
+          </div>
+          <button @click="copyHistorySummary(historyModalData)" class="px-6 py-2.5 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">content_copy</span>
+            {{ currentLanguage === 'en' ? 'Copy Summary' : '复制摘要' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Help Modal -->
+    <div v-if="showImportHelp" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showImportHelp = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-8 w-[600px] max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h3 class="text-2xl font-bold font-['Manrope'] text-[#f2ca50]">{{ currentLanguage === 'en' ? 'Import Help' : '导入帮助' }}</h3>
+          </div>
+          <button @click="showImportHelp = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+        
+        <div class="space-y-6 text-[#d0c5af]">
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📤 {{ currentLanguage === 'en' ? 'Export Data' : '导出数据' }}</h4>
+            <p class="text-sm">{{ currentLanguage === 'en' ? 'Click "Export Data" button to download all history as JSON file.' : '点击"导出数据"按钮将所有历史记录下载为 JSON 文件。' }}</p>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📥 {{ currentLanguage === 'en' ? 'Import Data' : '导入数据' }}</h4>
+            <p class="text-sm">{{ currentLanguage === 'en' ? 'Click "Import Data" button and select exported JSON file to import.' : '点击"导入数据"按钮并选择要导入的 JSON 文件。' }}</p>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">🔄 {{ currentLanguage === 'en' ? 'Sync Notes' : '同步说明' }}</h4>
+            <ul class="text-sm space-y-2">
+              <li>• {{ currentLanguage === 'en' ? 'Import merges data, same date will be overwritten' : '导入时会合并数据，相同日期的数据会被覆盖' }}</li>
+              <li>• {{ currentLanguage === 'en' ? 'Backup current data before exporting' : '建议导出前先备份当前数据' }}</li>
+              <li>• {{ currentLanguage === 'en' ? 'Can transfer data between computers via file' : '可以在不同电脑间通过文件传输同步数据' }}</li>
+            </ul>
+          </div>
+          
+          <div class="bg-[#2a2a2a] rounded-lg p-4">
+            <h4 class="font-bold text-[#f2ca50] mb-2">📋 {{ currentLanguage === 'en' ? 'File Format' : '文件格式' }}</h4>
+            <pre class="text-xs text-[#e5e2e1] whitespace-pre-wrap font-mono mt-2">{
+  "YYYY-MM-DD": {
+    "date": "YYYY-MM-DD",
+    "todos": [...],
+    "completed": [...],
+    "issues": [...],
+    "blockers": [...]
+  }
+}</pre>
+          </div>
+        </div>
+        
+        <div class="flex justify-end mt-8">
+          <button @click="showImportHelp = false" class="px-6 py-2.5 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition">{{ currentLanguage === 'en' ? 'Got it' : '知道了' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- {{ currentLanguage === 'en' ? 'Category Management' : '类别管理' }} Modal -->
+    <div v-if="showCategoryModal" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showCategoryModal = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-6 w-[400px]">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-[#e5e2e1]">{{ currentLanguage === 'en' ? 'Manage Categories' : '管理类别' }}</h3>
+          <button @click="showCategoryModal = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+        
+        <div class="space-y-2 mb-4 max-h-[300px] overflow-y-auto">
+          <div v-for="cat in categories" :key="cat.id" class="flex items-center gap-2 p-2 rounded bg-[#2a2a2a]/50 group">
+            <template v-if="editingCategoryId === cat.id">
+              <input v-model="editingCategoryName" @keyup.enter="updateCategory(cat.id, editingCategoryName)" @blur="updateCategory(cat.id, editingCategoryName)" class="flex-1 bg-[#353534] text-[#e5e2e1] px-2 py-1 rounded border border-[#f2ca50] outline-none" autofocus />
+            </template>
+            <template v-else>
+              <span class="flex-1 text-[#e5e2e1]">{{ cat.name }}</span>
+              <button @click="editingCategoryId = cat.id; editingCategoryName = cat.name" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 text-sm">edit</button>
+              <button @click="deleteCategory(cat.id)" class="material-symbols-outlined text-[#d0c5af] opacity-0 group-hover:opacity-100 hover:text-[#ffb4ab] text-sm">delete</button>
+            </template>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <input v-model="newCategoryName" :placeholder="currentLanguage === 'en' ? 'New category name' : '新类别名称'" class="flex-1 bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded border border-[#99907c]/30 focus:border-[#f2ca50] outline-none" @keyup.enter="addCategory(newCategoryName); newCategoryName = ''" />
+          <button @click="addCategory(newCategoryName); newCategoryName = ''" class="px-4 py-2 bg-[#f2ca50] text-[#3c2f00] font-bold rounded hover:brightness-110">{{ currentLanguage === 'en' ? 'Add' : '添加' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Success/Error Toast -->
+    <div v-if="importSuccess" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#4ade80] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+      <span class="material-symbols-outlined text-[#4ade80]">check_circle</span>
+      <span class="text-[#4ade80] text-sm">{{ importMessage || 'Import successful' }}</span>
+    </div>
+    <div v-if="importError" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#201f1f] border border-[#ffb4ab] rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+      <span class="material-symbols-outlined text-[#ffb4ab]">error</span>
+      <span class="text-[#ffb4ab] text-sm">{{ importError }}</span>
+    </div>
+
+    <!-- Summary Modal for Today -->
+    <div v-if="showSummaryModalFlag" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showSummaryModalFlag = false">
+      <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-8 w-[600px] max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-[#f2ca50] font-bold">{{ formatDateFull(currentDate) }}</span>
+            <h3 class="text-2xl font-bold font-['Manrope'] mt-1" :class="isReadOnly ? 'text-[#99907c]' : ''">{{ currentLanguage === 'en' ? 'Daily Summary' : '每日总结' }}{{ isReadOnly ? (currentLanguage === 'en' ? ' (Read-only)' : '（只读）') : '' }}</h3>
+          </div>
+          <button @click="showSummaryModalFlag = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
+        </div>
+
+        <div v-if="!isReadOnly" class="mb-6">
+          <button @click="showSummaryTab = 'detail'" :class="showSummaryTab === 'detail' ? 'bg-[#f2ca50] text-[#3c2f00]' : 'text-[#d0c5af] bg-[#2a2a2a]'" class="px-4 py-2 rounded-l-lg text-sm font-bold transition-colors">{{ currentLanguage === 'en' ? 'Detail' : '详情' }}</button>
+          <button @click="showSummaryTab = 'text'" :class="showSummaryTab === 'text' ? 'bg-[#f2ca50] text-[#3c2f00]' : 'text-[#d0c5af] bg-[#2a2a2a]'" class="px-4 py-2 rounded-r-lg text-sm font-bold transition-colors">{{ currentLanguage === 'en' ? 'Summary' : '摘要' }}</button>
+        </div>
+
+        <!-- Detail View -->
+        <div v-if="showSummaryTab === 'detail'" class="space-y-6">
+          <div v-if="data.todos.length">
+            <h4 class="text-sm font-bold text-[#f2ca50] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'To-do' : '待办' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in data.todos" :key="item.id" class="p-3 rounded bg-[#2a2a2a]/50 flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full" :class="{
+                  'bg-[#ffb4ab]': item.priority === 'high',
+                  'bg-[#ffb84d]': item.priority === 'mid',
+                  'bg-[#4ade80]': item.priority === 'low'
+                }"></span>
+                <span class="text-[#e5e2e1]">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="data.completed.length">
+            <h4 class="text-sm font-bold text-[#4ade80] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Completed' : '已完成' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in data.completed" :key="item.id" class="p-3 rounded bg-[#1c1b1b]/40 border-l-2 border-[#4ade80] flex items-center gap-3">
+                <span class="material-symbols-outlined text-[#4ade80] text-sm">check_circle</span>
+                <span class="text-[#d0c5af] line-through">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="data.issues.length">
+            <h4 class="text-sm font-bold text-[#ffe066] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Identified Issues' : '发现问题' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in data.issues" :key="item.id" class="p-3 rounded bg-[#2a2a2a]/50 flex items-center justify-between">
+                <span class="text-[#e5e2e1]">{{ item.title }}</span>
+                <span class="text-xs px-2 py-0.5 rounded" :class="{
+                  'bg-[#ffb4ab]/20 text-[#ffb4ab]': item.severity === 'high',
+                  'bg-[#ffb84d]/20 text-[#ffb84d]': item.severity === 'mid',
+                  'bg-[#ffe066]/20 text-[#ffe066]': item.severity === 'low'
+                }">{{ item.severity === 'high' ? 'High' : item.severity === 'mid' ? 'Mid' : 'Low' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="data.blockers.length">
+            <h4 class="text-sm font-bold text-[#ffb4ab] uppercase tracking-wider mb-3">{{ currentLanguage === 'en' ? 'Blockers' : '阻塞问题' }}</h4>
+            <div class="space-y-2">
+              <div v-for="item in data.blockers" :key="item.id" class="p-3 rounded bg-[#93000a]/20 border-l-4 border-[#ffb4ab]">
+                <span class="text-[#ffdad6] font-bold">{{ item.title }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Text View -->
+        <div v-if="showSummaryTab === 'text'" class="bg-[#2a2a2a] rounded-lg p-4">
+          <pre class="text-sm text-[#e5e2e1] whitespace-pre-wrap font-mono">{{ currentSummaryText }}</pre>
+        </div>
+        
+        <div class="flex justify-end mt-8 gap-4">
+          <div v-if="copySuccess" class="flex items-center gap-2 text-[#4ade80]">
+            <span class="material-symbols-outlined text-sm">check_circle</span>
+            <span class="text-sm">Copied</span>
+          </div>
+          <button @click="copyCurrentSummary" class="px-6 py-2.5 rounded-md bg-[#f2ca50] text-[#3c2f00] text-sm font-bold hover:brightness-110 transition flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">content_copy</span>
+            {{ currentLanguage === 'en' ? 'Copy Summary' : '复制摘要' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted, computed } from 'vue'
+import type { DayData, Item, Priority, Severity, Category } from './types'
+
+const currentDate = ref(new Date().toISOString().split('T')[0])
+const currentView = ref('dashboard')
+const currentLanguage = ref(localStorage.getItem('language') || 'en')
+const showHistory = ref(true)
+const showAddModal = ref(false)
+const addType = ref('')
+const addTitle = ref('')
+const addPriority = ref<Priority>('mid')
+const addSeverity = ref<Severity>('mid')
+const addDueDate = ref('')
+const showAddPicker = ref(false)
+const addPickerYear = ref(0)
+const addPickerMonth = ref(0)
+const addPickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: boolean}[]>([])
+const categories = ref<Category[]>([])
+const editingCategoryId = ref<string | null>(null)
+const editingCategoryName = ref('')
+const newCategoryName = ref('')
+const showCategoryModal = ref(false)
+const collapsedCategories = ref<Set<string>>(new Set())
+const addCategoryId = ref('')
+const dates = ref<string[]>([])
+const calendarDays = ref<{day: number, date: string, hasData: boolean}[]>([])
+const displayMonth = ref('')
+const timeframe = ref('all')
+
+const filteredDates = computed(() => {
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+  
+  if (timeframe.value === 'week') {
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    return dates.value.filter(d => d >= weekAgo && d <= today)
+  } else if (timeframe.value === 'month') {
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+    return dates.value.filter(d => d >= monthStart && d <= today)
+  }
+  return dates.value
+})
+
+const todoCategories = computed(() => {
+  const grouped = new Map<string, Item[]>()
+  data.todos.forEach(item => {
+    if (!item.category) return
+    if (!grouped.has(item.category)) grouped.set(item.category, [])
+    grouped.get(item.category)!.push(item)
+  })
+  
+  const result: {id: string, name: string, items: Item[]}[] = []
+  
+  categories.value.forEach(cat => {
+    const items = grouped.get(cat.id) || []
+    if (items.length > 0) {
+      result.push({ id: cat.id, name: cat.name, items })
+    }
+  })
+  
+  return result
+})
+
+const uncategorizedTodos = computed(() => {
+  return data.todos.filter(item => !item.category)
+})
+
+const completedCategories = computed(() => {
+  const grouped = new Map<string, Item[]>()
+  data.completed.forEach(item => {
+    if (!item.category) return
+    if (!grouped.has(item.category)) grouped.set(item.category, [])
+    grouped.get(item.category)!.push(item)
+  })
+  
+  const result: {id: string, name: string, items: Item[]}[] = []
+  
+  categories.value.forEach(cat => {
+    const items = grouped.get(cat.id) || []
+    if (items.length > 0) {
+      result.push({ id: cat.id, name: cat.name, items })
+    }
+  })
+  
+  return result
+})
+
+const uncategorizedCompleted = computed(() => {
+  return data.completed.filter(item => !item.category)
+})
+
+const issueCategories = computed(() => {
+  const grouped = new Map<string, Item[]>()
+  data.issues.forEach(item => {
+    if (!item.category) return
+    if (!grouped.has(item.category)) grouped.set(item.category, [])
+    grouped.get(item.category)!.push(item)
+  })
+  
+  const result: {id: string, name: string, items: Item[]}[] = []
+  
+  categories.value.forEach(cat => {
+    const items = grouped.get(cat.id) || []
+    if (items.length > 0) {
+      result.push({ id: cat.id, name: cat.name, items })
+    }
+  })
+  
+  return result
+})
+
+const uncategorizedIssues = computed(() => {
+  return data.issues.filter(item => !item.category)
+})
+
+const isReadOnly = ref(false)
+const showHistoryModalFlag = ref(false)
+const showImportHelp = ref(false)
+const importSuccess = ref(false)
+const importMessage = ref('')
+const importError = ref('')
+const showSummaryModalFlag = ref(false)
+const showSummaryTab = ref('detail')
+const showHistorySummaryTab = ref('detail')
+const currentSummaryText = ref('')
+const copySuccess = ref(false)
+const draggedItem = ref<{type: string, item: Item} | null>(null)
+const dragOverIndex = ref<{type: string, index: number} | null>(null)
+const historyModalData = ref<DayData | null>(null)
+const editingId = ref<string | null>(null)
+const editingTitle = ref('')
+const editInput = ref<HTMLInputElement | null>(null)
+const dueDateItemId = ref<string | null>(null)
+const dueDatePickerId = ref<string | null>(null)
+const pickerYear = ref(0)
+const pickerMonth = ref(0)
+const pickerDays = ref<{day: number, date: string, valid: boolean, isCurrent: boolean}[]>([])
+const categoryPickerId = ref<string | null>(null)
+
+function generateSummaryText(date: string, d: DayData): string {
+  const isZh = currentLanguage.value === 'zh'
+  const title = isZh ? '每日总结' : 'Daily Summary'
+  const todoTitle = isZh ? '待办' : 'To-do'
+  const completedTitle = isZh ? '已完成' : 'Completed'
+  const issuesTitle = isZh ? '发现问题' : 'Identified Issues'
+  const blockersTitle = isZh ? '阻塞问题' : 'Blockers'
+  const priorityH = isZh ? '高' : 'H'
+  const priorityM = isZh ? '中' : 'M'
+  const priorityL = isZh ? '低' : 'L'
+  const severityHigh = isZh ? '高' : 'High'
+  const severityMid = isZh ? '中' : 'Mid'
+  const severityLow = isZh ? '低' : 'Low'
+  let text = `${date} ${title}\n${'='.repeat(20)}\n\n`
+  if (d.todos?.length) {
+    text += `【${todoTitle}】\n`
+    d.todos.forEach(i => text += `- [${i.priority === 'high' ? priorityH : i.priority === 'mid' ? priorityM : priorityL}] ${i.title}\n`)
+    text += '\n'
+  }
+  if (d.completed?.length) {
+    text += `【${completedTitle}】\n`
+    d.completed.forEach(i => text += `- [Done] ${i.title}\n`)
+    text += '\n'
+  }
+  if (d.issues?.length) {
+    text += `【${issuesTitle}】\n`
+    d.issues.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
+    text += '\n'
+  }
+  if (d.blockers?.length) {
+    text += `【${blockersTitle}】\n`
+    d.blockers.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
+  }
+  return text
+}
+
+function openSummaryModal() {
+  currentSummaryText.value = generateSummaryText(currentDate.value, data)
+  showSummaryModalFlag.value = true
+}
+
+function showHistoryModal(date: string) {
+  const data = localStorage.getItem(date)
+  if (data) {
+    historyModalData.value = JSON.parse(data)
+    showHistoryModalFlag.value = true
+  }
+}
+
+function copyHistorySummary(historyData: DayData) {
+  const text = generateSummaryText(historyData.date, historyData)
+  window.electronAPI.clipboardWrite(text)
+  showCopySuccess()
+}
+
+function copyHistorySummaryByDate(date: string) {
+  const saved = localStorage.getItem(date)
+  if (saved) {
+    const historyData = JSON.parse(saved) as DayData
+    const text = generateSummaryText(historyData.date, historyData)
+    window.electronAPI.clipboardWrite(text)
+    showCopySuccess()
+  }
+}
+
+function copyCurrentSummary() {
+  window.electronAPI.clipboardWrite(currentSummaryText.value)
+  showCopySuccess()
+}
+
+function showCopySuccess() {
+  copySuccess.value = true
+  setTimeout(() => { copySuccess.value = false }, 1000)
+}
+
+function exportData() {
+  const keys = Object.keys(localStorage).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+  const exportObj: Record<string, DayData> = {}
+  keys.forEach(k => {
+    exportObj[k] = JSON.parse(localStorage.getItem(k)!)
+  })
+  const cats = localStorage.getItem('categories')
+  const exportData = { data: exportObj, categories: cats ? JSON.parse(cats) : [] }
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `daily-summary-${new Date().toISOString().split('T')[0]}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function importData(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target?.result as string)
+      let count = 0
+      if (imported.data) {
+        for (const [date, dayData] of Object.entries(imported.data)) {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            localStorage.setItem(date, JSON.stringify(dayData))
+            count++
+          }
+        }
+      } else {
+        for (const [date, dayData] of Object.entries(imported)) {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            localStorage.setItem(date, JSON.stringify(dayData))
+            count++
+          }
+        }
+      }
+      if (imported.categories && Array.isArray(imported.categories)) {
+        localStorage.setItem('categories', JSON.stringify(imported.categories))
+        categories.value = imported.categories
+      }
+      importSuccess.value = true
+      importMessage.value = `Imported ${count} days`
+      setTimeout(() => { importSuccess.value = false; importMessage.value = '' }, 3000)
+      const keys = Object.keys(localStorage)
+      dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
+      generateCalendarDays()
+      if (dates.value.length > 0) {
+        loadDate(dates.value[0])
+      }
+    } catch (err) {
+      importError.value = 'Invalid file format'
+      setTimeout(() => { importError.value = '' }, 3000)
+    }
+  }
+  reader.readAsText(file)
+  ;(event.target as HTMLInputElement).value = ''
+}
+
+function isHistoricalDate(date: string): boolean {
+  const today = new Date().toISOString().split('T')[0]
+  return date !== today
+}
+
+function changeMonth(delta: number) {
+  const [y, m] = displayMonth.value.split('-').map(Number)
+  const date = new Date(y, m - 1 + delta, 1)
+  displayMonth.value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  generateCalendarDays()
+}
+
+function formatDateFull(dateStr: string) {
+  const date = new Date(dateStr)
+  const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`
+}
+
+function getItemCount(dateStr: string) {
+  const data = localStorage.getItem(dateStr)
+  if (data) {
+    const d = JSON.parse(data)
+    return { todos: d.todos?.length || 0, completed: d.completed?.length || 0 }
+  }
+  return { todos: 0, completed: 0 }
+}
+
+function generateCalendarDays() {
+  const [year, month] = displayMonth.value.split('-').map(Number)
+  const firstDay = new Date(year, month - 1, 1).getDay()
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const days: {day: number, date: string, hasData: boolean}[] = []
+  for (let i = 0; i < firstDay; i++) {
+    days.push({ day: 0, date: '', hasData: false })
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({ day: i, date: dateStr, hasData: dates.value.includes(dateStr) })
+  }
+  calendarDays.value = days
+}
+
+const data = reactive<DayData>({ date: '', todos: [], completed: [], issues: [], blockers: [] })
+
+const priorities = computed(() => [
+  { value: 'high' as Priority, label: currentLanguage.value === 'en' ? 'H' : '高', color: 'priorityHigh' },
+  { value: 'mid' as Priority, label: currentLanguage.value === 'en' ? 'M' : '中', color: 'priorityMid' },
+  { value: 'low' as Priority, label: currentLanguage.value === 'en' ? 'L' : '低', color: 'priorityLow' }
+])
+
+const severities = computed(() => [
+  { value: 'high' as Severity, label: currentLanguage.value === 'en' ? 'High' : '高', color: 'severityHigh' },
+  { value: 'mid' as Severity, label: currentLanguage.value === 'en' ? 'Mid' : '中', color: 'severityMid' },
+  { value: 'low' as Severity, label: currentLanguage.value === 'en' ? 'Low' : '低', color: 'severityLow' }
+])
+
+function loadDate(date: string) {
+  currentDate.value = date
+  displayMonth.value = date.slice(0, 7)
+  const saved = localStorage.getItem(date)
+  if (saved) {
+    Object.assign(data, JSON.parse(saved))
+  } else {
+    data.date = date
+    data.todos = []
+    data.completed = []
+    data.issues = []
+    data.blockers = []
+  }
+  isReadOnly.value = date < new Date().toISOString().split('T')[0]
+}
+
+function refreshIfNewDay() {
+  const today = new Date().toISOString().split('T')[0]
+  if (currentDate.value !== today) {
+    loadDate(today)
+    const keys = Object.keys(localStorage)
+    dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
+    generateCalendarDays()
+  }
+}
+
+function carryOverFromYesterday(date: string) {
+  const yesterday = new Date(date)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yStr = yesterday.toISOString().split('T')[0]
+  const yData = localStorage.getItem(yStr)
+  if (!yData) return
+  const y = JSON.parse(yData)
+  if (y.todos?.length) {
+    y.todos.forEach((t: Item) => {
+      const item: Item = { ...t, id: crypto.randomUUID(), createdAt: new Date().toISOString(), sourceType: 'todos' }
+      data.todos.push(item)
+    })
+  }
+  if (y.issues?.length) {
+    y.issues.forEach((i: Item) => {
+      const item: Item = { ...i, id: crypto.randomUUID(), createdAt: new Date().toISOString(), sourceType: 'issues' }
+      data.issues.push(item)
+    })
+  }
+  if (y.blockers?.length) {
+    y.blockers.forEach((b: Item) => {
+      const item: Item = { ...b, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+      data.blockers.push(item)
+    })
+  }
+  if (data.todos.length || data.issues.length || data.blockers.length) {
+    saveData()
+  }
+}
+
+function saveData() {
+  localStorage.setItem(currentDate.value, JSON.stringify(data))
+}
+
+function selectDate(date: string) { 
+  loadDate(date)
+}
+
+function openAddModal(type: string) {
+  if (isReadOnly.value) return
+  addType.value = type
+  addTitle.value = ''
+  addCategoryId.value = ''
+  addPriority.value = 'mid'
+  addDueDate.value = ''
+  showAddModal.value = true
+}
+
+function submitAdd() {
+  if (!addTitle.value.trim()) return
+  const item: Item = {
+    id: crypto.randomUUID(),
+    title: addTitle.value,
+    priority: addType.value === 'todos' ? addPriority.value : undefined,
+    severity: (addType.value === 'issues' || addType.value === 'blockers') ? addSeverity.value : undefined,
+    createdAt: new Date().toISOString(),
+    dueDate: addType.value === 'todos' && addDueDate.value ? addDueDate.value : undefined,
+    category: (addType.value === 'todos' || addType.value === 'completed' || addType.value === 'issues') && addCategoryId.value ? addCategoryId.value : undefined
+  }
+  if (addType.value === 'todos') data.todos.push(item)
+  else if (addType.value === 'completed') data.completed.push(item)
+  else if (addType.value === 'issues') data.issues.push(item)
+  else if (addType.value === 'blockers') data.blockers.push(item)
+  saveData()
+  showAddModal.value = false
+  addTitle.value = ''
+  addPriority.value = 'mid'
+  addDueDate.value = ''
+  addCategoryId.value = ''
+}
+
+function toggleComplete(id: string) {
+  const idx = data.todos.findIndex(i => i.id === id)
+  if (idx > -1) {
+    const item = data.todos.splice(idx, 1)[0]
+    item.completedAt = new Date().toISOString()
+    item.sourceType = 'todos'
+    data.completed.unshift(item)
+    saveData()
+  }
+}
+
+function moveToTodo(item: Item) {
+  if (isReadOnly.value) return
+  const idx = data.completed.findIndex(i => i.id === item.id)
+  if (idx > -1) {
+    data.completed.splice(idx, 1)
+    delete item.completedAt
+    const source = item.sourceType
+    delete item.sourceType
+    if (source === 'issues') {
+      data.issues.unshift(item)
+    } else {
+      data.todos.unshift(item)
+    }
+    saveData()
+  }
+}
+
+function togglePriority(item: Item) {
+  if (isReadOnly.value) return
+  const priorities: (Priority | undefined)[] = [undefined, 'low', 'mid', 'high']
+  const idx = priorities.indexOf(item.priority)
+  item.priority = priorities[(idx + 1) % priorities.length] as Priority | undefined
+  saveData()
+}
+
+function toggleSeverity(item: Item) {
+  if (isReadOnly.value) return
+  const severities: (Severity | undefined)[] = [undefined, 'low', 'mid', 'high']
+  const idx = severities.indexOf(item.severity)
+  item.severity = severities[(idx + 1) % severities.length] as Severity | undefined
+  saveData()
+}
+
+function markIssueComplete(item: Item) {
+  if (isReadOnly.value) return
+  const idx = data.issues.findIndex(i => i.id === item.id)
+  if (idx > -1) {
+    data.issues.splice(idx, 1)
+    item.completedAt = new Date().toISOString()
+    item.sourceType = 'issues'
+    data.completed.unshift(item)
+    saveData()
+  }
+}
+
+function initPicker(item: Item) {
+  const d = item.dueDate ? new Date(item.dueDate) : new Date()
+  pickerYear.value = d.getFullYear()
+  pickerMonth.value = d.getMonth() + 1
+  updatePickerDays(item.dueDate)
+}
+
+function updatePickerDays(currentDue?: string) {
+  const firstDay = new Date(pickerYear.value, pickerMonth.value - 1, 1).getDay()
+  const daysInMonth = new Date(pickerYear.value, pickerMonth.value, 0).getDate()
+  const today = new Date().toISOString().split('T')[0]
+  const days: {day: number, date: string, valid: boolean, isCurrent: boolean}[] = []
+  for (let i = 0; i < firstDay; i++) days.push({day: 0, date: '', valid: false, isCurrent: false})
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = `${pickerYear.value}-${String(pickerMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({day: i, date, valid: true, isCurrent: date === currentDue})
+  }
+  pickerDays.value = days
+}
+
+function changePickerMonth(delta: number) {
+  pickerMonth.value += delta
+  if (pickerMonth.value > 12) { pickerMonth.value = 1; pickerYear.value++ }
+  if (pickerMonth.value < 1) { pickerMonth.value = 12; pickerYear.value-- }
+  updatePickerDays()
+}
+
+function confirmDueDate(item: Item, date: string) {
+  item.dueDate = date
+  saveData()
+  dueDatePickerId.value = null
+}
+
+function toggleAddPicker() {
+  showAddPicker.value = !showAddPicker.value
+  if (showAddPicker.value) {
+    const d = addDueDate.value ? new Date(addDueDate.value) : new Date()
+    addPickerYear.value = d.getFullYear()
+    addPickerMonth.value = d.getMonth() + 1
+    updateAddPickerDays()
+  }
+}
+
+function updateAddPickerDays() {
+  const firstDay = new Date(addPickerYear.value, addPickerMonth.value - 1, 1).getDay()
+  const daysInMonth = new Date(addPickerYear.value, addPickerMonth.value, 0).getDate()
+  const days: {day: number, date: string, valid: boolean, isCurrent: boolean}[] = []
+  for (let i = 0; i < firstDay; i++) days.push({day: 0, date: '', valid: false, isCurrent: false})
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = `${addPickerYear.value}-${String(addPickerMonth.value).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({day: i, date, valid: true, isCurrent: date === addDueDate.value})
+  }
+  addPickerDays.value = days
+}
+
+function changeAddPickerMonth(delta: number) {
+  addPickerMonth.value += delta
+  if (addPickerMonth.value > 12) { addPickerMonth.value = 1; addPickerYear.value++ }
+  if (addPickerMonth.value < 1) { addPickerMonth.value = 12; addPickerYear.value-- }
+  updateAddPickerDays()
+}
+
+function setDueDate(item: Item) {
+  const input = document.querySelector('input[type="date"]') as HTMLInputElement
+  if (input?.value) {
+    item.dueDate = input.value
+    saveData()
+  }
+  dueDateItemId.value = null
+}
+
+function deleteItem(type: string, id: string) {
+  if (type === 'todos') data.todos = data.todos.filter(i => i.id !== id)
+  else if (type === 'completed') data.completed = data.completed.filter(i => i.id !== id)
+  else if (type === 'issues') data.issues = data.issues.filter(i => i.id !== id)
+  else if (type === 'blockers') data.blockers = data.blockers.filter(i => i.id !== id)
+  saveData()
+}
+
+function startEdit(item: Item) {
+  if (isReadOnly.value) return
+  editingId.value = item.id
+  editingTitle.value = item.title
+}
+
+function saveEdit(id: string) {
+  if (!editingTitle.value.trim()) {
+    editingId.value = null
+    return
+  }
+  const item = data.todos.find(i => i.id === id) || data.completed.find(i => i.id === id) || data.issues.find(i => i.id === id) || data.blockers.find(i => i.id === id)
+  if (item) {
+    item.title = editingTitle.value.trim()
+    saveData()
+  }
+  editingId.value = null
+}
+
+function onDragStart(type: string, item: Item) {
+  if (isReadOnly.value) return
+  draggedItem.value = { type, item }
+}
+
+function onDragOver(type: string, index: number) {
+  if (isReadOnly.value || !draggedItem.value) return
+  dragOverIndex.value = { type, index }
+}
+
+function onDrop(type: string, index: number) {
+  if (isReadOnly.value || !draggedItem.value) return
+  const { type: srcType, item } = draggedItem.value
+  
+  let srcList: Item[]
+  if (srcType === 'todos') srcList = data.todos
+  else if (srcType === 'completed') srcList = data.completed
+  else if (srcType === 'issues') srcList = data.issues
+  else srcList = data.blockers
+  
+  const srcIdx = srcList.findIndex(i => i.id === item.id)
+  if (srcIdx > -1) {
+    srcList.splice(srcIdx, 1)
+  }
+  
+  let dstList: Item[]
+  if (type === 'todos') dstList = data.todos
+  else if (type === 'completed') dstList = data.completed
+  else if (type === 'issues') dstList = data.issues
+  else dstList = data.blockers
+  
+  dstList.splice(index, 0, item)
+  saveData()
+  
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+function onDragEnd() {
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+function bulkDelete() {
+  data.todos = []
+  data.completed = []
+  data.issues = []
+  data.blockers = []
+  saveData()
+}
+
+function generateSummary() {
+  const date = currentDate.value
+  const isZh = currentLanguage.value === 'zh'
+  const title = isZh ? '每日总结' : 'Daily Summary'
+  const todoTitle = isZh ? '待办' : 'To-do'
+  const completedTitle = isZh ? '已完成' : 'Completed'
+  const issuesTitle = isZh ? '发现问题' : 'Identified Issues'
+  const blockersTitle = isZh ? '阻塞问题' : 'Blockers'
+  const priorityH = isZh ? '高' : 'H'
+  const priorityM = isZh ? '中' : 'M'
+  const priorityL = isZh ? '低' : 'L'
+  const severityHigh = isZh ? '高' : 'High'
+  const severityMid = isZh ? '中' : 'Mid'
+  const severityLow = isZh ? '低' : 'Low'
+  let text = `${date} ${title}\n${'='.repeat(20)}\n\n`
+  if (data.todos.length) {
+    text += `【${todoTitle}】\n`
+    data.todos.forEach(i => text += `- [${i.priority === 'high' ? priorityH : i.priority === 'mid' ? priorityM : priorityL}] ${i.title}\n`)
+    text += '\n'
+  }
+  if (data.completed.length) {
+    text += `【${completedTitle}】\n`
+    data.completed.forEach(i => text += `- [Done ${i.completedAt?.split('T')[1]?.slice(0, 5)}] ${i.title}\n`)
+    text += '\n'
+  }
+  if (data.issues.length) {
+    text += `【${issuesTitle}】\n`
+    data.issues.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
+    text += '\n'
+  }
+  if (data.blockers.length) {
+    text += `【${blockersTitle}】\n`
+    data.blockers.forEach(i => text += `- [${i.severity === 'high' ? severityHigh : i.severity === 'mid' ? severityMid : severityLow}] ${i.title}\n`)
+  }
+  window.electronAPI.clipboardWrite(text)
+}
+
+function minimize() { window.electronAPI?.minimize() }
+function maximize() { window.electronAPI?.maximize() }
+function close() { window.electronAPI?.close() }
+
+function toggleLanguage() {
+  currentLanguage.value = currentLanguage.value === 'en' ? 'zh' : 'en'
+  localStorage.setItem('language', currentLanguage.value)
+}
+
+function t(key: string): string {
+  const translations: Record<string, Record<string, string>> = {
+    '01. To-do': { en: '01. To-do', zh: '01. 待办' },
+    '02. Completed': { en: '02. Completed', zh: '02. 已完成' },
+    '03. Identified Issues': { en: '03. Identified Issues', zh: '03. 发现问题' },
+    '04. Blockers': { en: '04. Blockers', zh: '04. 无法解决的问题' },
+    'Add To-do': { en: 'Add To-do', zh: '添加待办' },
+    'Add Completed': { en: 'Add Completed', zh: '添加已完成' },
+    'Add Issue': { en: 'Add Issue', zh: '添加问题' },
+    'Add Blocker': { en: 'Add Blocker', zh: '添加阻塞' },
+    '+ Add To-do': { en: '+ Add To-do', zh: '+ 添加待办' },
+    '+ Add Completed': { en: '+ Add Completed', zh: '+ 添加已完成' },
+    '+ Add Issue': { en: '+ Add Issue', zh: '+ 添加问题' },
+    'Title': { en: 'Title', zh: '标题' },
+    'Enter title...': { en: 'Enter title...', zh: '输入标题...' },
+    'Priority': { en: 'Priority', zh: '优先级' },
+    'Due Date (Optional)': { en: 'Due Date (Optional)', zh: '截止日期（可选）' },
+    'Click to select date...': { en: 'Click to select date...', zh: '点击选择日期...' },
+    'Category (Optional)': { en: 'Category (Optional)', zh: '类别（可选）' },
+    'No category': { en: 'No category', zh: '不选择类别' },
+    'Severity': { en: 'Severity', zh: '严重程度' },
+    'High': { en: 'High', zh: '高' },
+    'Mid': { en: 'Mid', zh: '中' },
+    'Low': { en: 'Low', zh: '低' },
+    'Cancel': { en: 'Cancel', zh: '取消' },
+    'Add': { en: 'Add', zh: '添加' },
+    'Detail': { en: 'Detail', zh: '详情' },
+    'Summary': { en: 'Summary', zh: '摘要' },
+    'Copied': { en: 'Copied', zh: '复制成功' },
+    'Copy Summary': { en: 'Copy Summary', zh: '复制摘要' },
+    'Import Help': { en: 'Import Help', zh: '导入帮助' },
+    'Category Management': { en: 'Category Management', zh: '类别管理' },
+    'Export Data': { en: 'Export Data', zh: '导出数据' },
+    'Import Data': { en: 'Import Data', zh: '导入数据' },
+    'New category name': { en: 'New category name', zh: '新类别名称' },
+    'Remove category': { en: 'Remove category', zh: '移除分类' },
+    'Close': { en: 'Close', zh: '关闭' },
+    'Clear': { en: 'Clear', zh: '清除' },
+    'Got it': { en: 'Got it', zh: '知道了' },
+    'Read-only': { en: 'Read-only', zh: '只读' },
+    'Import successful': { en: 'Import successful', zh: '导入成功' },
+    'days': { en: 'days', zh: '天数据' },
+    'Manage Categories': { en: 'Manage Categories', zh: '管理类别' },
+    'Export': { en: 'Export', zh: '导出' },
+    'button': { en: 'button', zh: '按钮' },
+    'to download all history as JSON file': { en: 'to download all history as JSON file', zh: '将当前所有历史记录下载为 JSON 文件' },
+    'and select exported JSON file to import': { en: 'and select exported JSON file to import', zh: '选择导出的 JSON 文件即可导入' },
+    'Sync Notes': { en: 'Sync Notes', zh: '同步说明' },
+    'Import merges data, same date will be overwritten': { en: 'Import merges data, same date will be overwritten', zh: '导入时会合并数据，相同日期的数据会被覆盖' },
+    'Backup current data before exporting': { en: 'Backup current data before exporting', zh: '建议导出前先备份当前数据' },
+    'Can transfer data between computers via file': { en: 'Can transfer data between computers via file', zh: '可以在不同电脑间通过文件传输同步数据' },
+    'File Format': { en: 'File Format', zh: '文件格式' },
+    'Dashboard': { en: 'Dashboard', zh: '仪表盘' },
+    'History': { en: 'History', zh: '历史' },
+    'Daily Summary': { en: 'Daily Summary', zh: '每日总结' },
+    'Refine your daily output and generate automated work logs': { en: 'Refine your daily output and generate automated work logs', zh: '优化您的每日工作输出并生成自动化工作日志' },
+    'Today': { en: 'Today', zh: '今天' },
+    'No items yet': { en: 'No items yet', zh: '暂无内容' },
+    'Delete': { en: 'Delete', zh: '删除' },
+    'Generate Summary': { en: 'Generate Summary', zh: '生成总结' },
+  }
+  return translations[key]?.[currentLanguage.value] || key
+}
+
+onMounted(() => {
+  loadDate(currentDate.value)
+  const keys = Object.keys(localStorage)
+  dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
+  displayMonth.value = currentDate.value.slice(0, 7)
+  generateCalendarDays()
+  loadCategories()
+  setInterval(refreshIfNewDay, 60000)
+  document.addEventListener('click', () => {
+    dueDatePickerId.value = null
+    categoryPickerId.value = null
+  })
+})
+
+function loadCategories() {
+  const saved = localStorage.getItem('categories')
+  if (saved) {
+    categories.value = JSON.parse(saved)
+  }
+}
+
+function saveCategories() {
+  localStorage.setItem('categories', JSON.stringify(categories.value))
+}
+
+function addCategory(name: string) {
+  if (!name.trim()) return
+  const category: Category = {
+    id: crypto.randomUUID(),
+    name: name.trim()
+  }
+  categories.value.push(category)
+  saveCategories()
+}
+
+function updateCategory(id: string, name: string) {
+  const cat = categories.value.find(c => c.id === id)
+  if (cat) {
+    cat.name = name.trim()
+    saveCategories()
+  }
+  editingCategoryId.value = null
+}
+
+function deleteCategory(id: string) {
+  categories.value = categories.value.filter(c => c.id !== id)
+  data.todos.forEach(t => { if (t.category === id) t.category = undefined })
+  data.completed.forEach(t => { if (t.category === id) t.category = undefined })
+  saveData()
+  saveCategories()
+}
+
+function toggleCategoryCollapse(categoryId: string) {
+  if (collapsedCategories.value.has(categoryId)) {
+    collapsedCategories.value.delete(categoryId)
+  } else {
+    collapsedCategories.value.add(categoryId)
+  }
+}
+
+function openAddModalWithCategory(type: string, categoryId: string) {
+  openAddModal(type)
+  addCategoryId.value = categoryId
+}
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;800&family=Inter:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+.font-['Manrope'] { font-family: 'Manrope', sans-serif; }
+.font-['Inter'] { font-family: 'Inter', sans-serif; }
+
+:root {
+  --priorityHigh: #ffb4ab;
+  --priorityMid: #ffb84d;
+  --priorityLow: #4ade80;
+  --severityHigh: #ffb4ab;
+  --severityMid: #ffb84d;
+  --severityLow: #ffe066;
+}
+
+.bg-priorityHigh\/20 { background: rgba(255, 180, 171, 0.2); }
+.bg-priorityMid\/20 { background: rgba(255, 184, 77, 0.2); }
+.bg-priorityLow\/20 { background: rgba(74, 222, 128, 0.2); }
+.text-priorityHigh { color: #ffb4ab; }
+.text-priorityMid { color: #ffb84d; }
+.text-priorityLow { color: #4ade80; }
+
+.bg-severityHigh\/20 { background: rgba(255, 180, 171, 0.2); }
+.bg-severityMid\/20 { background: rgba(255, 184, 77, 0.2); }
+.bg-severityLow\/20 { background: rgba(255, 224, 102, 0.2); }
+.text-severityHigh { color: #ffb4ab; }
+.text-severityMid { color: #ffb84d; }
+.text-severityLow { color: #ffe066; }
+
+.border-\[0\.5px_rgba\(153\,144\,124\,0\.2\)\] { border: 0.5px solid rgba(153, 144, 124, 0.2); }
+</style>
