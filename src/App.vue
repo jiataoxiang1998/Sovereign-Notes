@@ -1195,7 +1195,7 @@ const severities = computed(() => [
 
 function loadDate(date: string) {
   currentDate.value = date
-  isReadOnly.value = isHistoricalDate(date)
+  displayMonth.value = date.slice(0, 7)
   const saved = localStorage.getItem(date)
   if (saved) {
     Object.assign(data, JSON.parse(saved))
@@ -1205,7 +1205,17 @@ function loadDate(date: string) {
     data.completed = []
     data.issues = []
     data.blockers = []
-    carryOverFromYesterday(date)
+  }
+  isReadOnly.value = date < new Date().toISOString().split('T')[0]
+}
+
+function refreshIfNewDay() {
+  const today = new Date().toISOString().split('T')[0]
+  if (currentDate.value !== today) {
+    loadDate(today)
+    const keys = Object.keys(localStorage)
+    dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
+    generateCalendarDays()
   }
 }
 
@@ -1602,6 +1612,7 @@ onMounted(() => {
   displayMonth.value = currentDate.value.slice(0, 7)
   generateCalendarDays()
   loadCategories()
+  setInterval(refreshIfNewDay, 60000)
   document.addEventListener('click', () => {
     dueDatePickerId.value = null
     categoryPickerId.value = null
