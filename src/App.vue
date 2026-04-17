@@ -22,6 +22,10 @@
           <span class="material-symbols-outlined">history</span>
           <span>{{ currentLanguage === 'en' ? 'History' : '历史' }}</span>
         </a>
+        <a @click="currentView = 'chat'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'chat'}">
+          <span class="material-symbols-outlined">chat</span>
+          <span>{{ currentLanguage === 'en' ? 'Chat' : '聊天' }}</span>
+        </a>
       </nav>
     </aside>
 
@@ -539,6 +543,57 @@
             </div>
           </div>
         </template>
+
+        <!-- Chat View -->
+        <template v-if="currentView === 'chat'">
+          <div class="h-[calc(100vh-8rem)] flex flex-col">
+            <div class="mb-6">
+              <h1 class="text-4xl font-extrabold font-Manrope tracking-tighter text-[#e5e2e1] mb-2">
+                AI Chat
+              </h1>
+              <p class="text-[#d0c5af]">
+                <span v-if="chatModelStatus === 'checking'">Checking model...</span>
+                <span v-else-if="chatModelStatus === 'ready'" class="text-[#4ade80]">Model ready</span>
+                <span v-else-if="chatModelStatus === 'not-installed'" class="text-[#ffb4ab]">
+                  Ollama not found. Install from ollama.com
+                </span>
+              </p>
+            </div>
+            
+            <div class="flex-1 flex flex-col">
+              <div class="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-[#201f1f] rounded-xl">
+                <div v-for="(msg, index) in chatMessages" :key="index" class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                  <div class="max-w-[80%] p-3 rounded-lg" :class="msg.role === 'user' ? 'bg-[#f2ca50] text-[#3c2f00]' : 'bg-[#2a2a2a] text-[#e5e2e1]'">
+                    <div class="text-sm whitespace-pre-wrap">{{ msg.content }}</div>
+                  </div>
+                </div>
+                <div v-if="chatLoading" class="flex justify-start">
+                  <div class="bg-[#2a2a2a] p-3 rounded-lg">
+                    <span class="material-symbols-outlined animate-spin text-[#f2ca50]">sync</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex gap-2">
+                <input
+                  v-model="chatInput"
+                  @keyup.enter="sendChatMessage"
+                  placeholder="Type your message..."
+                  class="flex-1 bg-[#2a2a2a] text-[#e5e2e1] px-4 py-3 rounded-lg border border-[#99907c]/30 focus:border-[#f2ca50] outline-none"
+                  :disabled="chatLoading"
+                />
+                <button
+                  @click="sendChatMessage"
+                  :disabled="chatLoading || !chatInput.trim()"
+                  class="px-6 bg-[#f2ca50] text-[#3c2f00] font-bold rounded-lg hover:brightness-110 transition"
+                  :class="{ 'opacity-50': chatLoading || !chatInput.trim() }"
+                >
+                  <span class="material-symbols-outlined">send</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </main>
 
@@ -866,6 +921,12 @@ import type { DayData, Item, Priority, Severity, Category } from './types'
 const currentDate = ref(new Date().toISOString().split('T')[0])
 const currentView = ref('dashboard')
 const currentLanguage = ref(localStorage.getItem('language') || 'en')
+
+const chatMessages = ref<{role: 'user' | 'assistant', content: string}[]>([])
+const chatInput = ref('')
+const chatLoading = ref(false)
+const chatModelStatus = ref('')
+
 const showHistory = ref(true)
 const showAddModal = ref(false)
 const addType = ref('')
@@ -1541,6 +1602,62 @@ function toggleLanguage() {
   localStorage.setItem('language', currentLanguage.value)
 }
 
+function checkOllamaStatus() {
+  chatModelStatus.value = 'checking'
+  fetch('http://localhost:11434/api/tags', { method: 'GET' })
+    .then(res => {
+      chatModelStatus.value = res.ok ? 'ready' : 'not-installed'
+    })
+    .catch(() => {
+      chatModelStatus.value = 'not-installed'
+    })
+}
+
+function sendChatMessage() {
+  if (!chatInput.value.trim() || chatLoading.value) return
+  
+  if (chatModelStatus.value !== 'ready') {
+    chatMessages.value.push({
+      role: 'assistant',
+      content: currentLanguage.value === 'zh'
+        ? '请先安装 Ollama 并下载模型。\n1. 安装: https://ollama.com\n2. 运行: ollama pull qwen2.5\n3. 重启应用'
+        : 'Please install Ollama first.\n1. Install: https://ollama.com\n2. Run: ollama pull qwen2.5\n3. Restart the app'
+    })
+    return
+  }
+  
+  const userMessage = chatInput.value.trim()
+  chatMessages.value.push({ role: 'user', content: userMessage })
+  chatInput.value = ''
+  chatLoading.value = true
+  
+  const isZh = currentLanguage.value === 'zh'
+  const messages = [
+    { role: 'system', content: isZh ? '你是 AI 助手,请简洁回答。' : 'You are a helpful assistant.' },
+    ...chatMessages.value.map(m => ({ role: m.role, content: m.content }))
+  ]
+  
+  fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'qwen2.5', messages: messages, stream: false })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Ollama error')
+      return res.json()
+    })
+    .then(data => {
+      const reply = data.message?.content || (isZh ? '无法生成回复' : 'Could not generate')
+      chatMessages.value.push({ role: 'assistant', content: reply })
+    })
+    .catch((error: any) => {
+      chatMessages.value.push({ role: 'assistant', content: isZh ? `错误: ${error.message}` : `Error: ${error.message}` })
+    })
+    .finally(() => {
+      chatLoading.value = false
+    })
+}
+
 function t(key: string): string {
   const translations: Record<string, Record<string, string>> = {
     '01. To-do': { en: '01. To-do', zh: '01. 待办' },
@@ -1613,6 +1730,7 @@ onMounted(() => {
   generateCalendarDays()
   loadCategories()
   setInterval(refreshIfNewDay, 60000)
+  checkOllamaStatus()
   document.addEventListener('click', () => {
     dueDatePickerId.value = null
     categoryPickerId.value = null
