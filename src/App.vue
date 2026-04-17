@@ -504,10 +504,13 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import type { DayData, Item, Priority, Severity, Category } from './types'
 import DashboardView from './views/DashboardView.vue'
 import HistoryView from './views/HistoryView.vue'
+import { useLanguage } from './composables/useLanguage'
+
+const { currentLanguage: currentLanguageRef, toggle: toggleLanguage } = useLanguage()
+const currentLanguage = currentLanguageRef
 
 const currentDate = ref(new Date().toISOString().split('T')[0])
 const currentView = ref('dashboard')
-const currentLanguage = ref(localStorage.getItem('language') || 'en')
 
 const chatMessages = ref<{role: 'user' | 'assistant', content: string}[]>([])
 const chatInput = ref('')
@@ -1199,11 +1202,6 @@ function generateSummary() {
 function minimize() { window.electronAPI?.minimize() }
 function maximize() { window.electronAPI?.maximize() }
 function close() { window.electronAPI?.close() }
-
-function toggleLanguage() {
-  currentLanguage.value = currentLanguage.value === 'en' ? 'zh' : 'en'
-  localStorage.setItem('language', currentLanguage.value)
-}
 
 function checkOllamaStatus() {
   chatModelStatus.value = 'checking'
