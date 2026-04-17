@@ -117,6 +117,7 @@
             :display-month="displayMonth"
             :current-date="currentDate"
             :categories="categories"
+            :item-counts="itemCounts"
             @set-timeframe="timeframe = $event"
             @change-month="changeMonth"
             @show-history-modal="showHistoryModal"
@@ -548,6 +549,18 @@ const filteredDates = computed(() => {
     return dates.value.filter(d => d >= monthStart && d <= today)
   }
   return dates.value
+})
+
+const itemCounts = computed(() => {
+  const counts: Record<string, { todos: number; completed: number }> = {}
+  dates.value.forEach(date => {
+    const data = localStorage.getItem(date)
+    if (data) {
+      const d = JSON.parse(data)
+      counts[date] = { todos: d.todos?.length || 0, completed: d.completed?.length || 0 }
+    }
+  })
+  return counts
 })
 
 const todoCategories = computed(() => {

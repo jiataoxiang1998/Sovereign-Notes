@@ -11,6 +11,7 @@ defineProps<{
   displayMonth: string
   currentDate: string
   categories: Category[]
+  itemCounts: Record<string, { todos: number; completed: number }>
 }>()
 
 const emit = defineEmits<{
@@ -100,8 +101,8 @@ function getItemCount(date: string) {
           <div>
             <p class="text-[10px] uppercase text-[#d0c5af] font-bold mb-2 tracking-tighter">{{ currentLanguage === 'en' ? 'Summary' : '摘要' }}</p>
             <ul class="space-y-2 text-sm text-[#e5e2e1]/90">
-              <li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ getItemCount(date).todos }} {{ currentLanguage === 'en' ? 'Tasks' : '任务' }}</li>
-              <li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ getItemCount(date).completed }} {{ currentLanguage === 'en' ? 'Completed' : '已完成' }}</li>
+<li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ itemCounts[date]?.todos || 0 }} {{ currentLanguage === 'en' ? 'Tasks' : '任务' }}</li>
+                      <li class="flex items-start"><span class="material-symbols-outlined text-[#f2ca50] text-xs mr-2 mt-0.5">check_circle</span> {{ itemCounts[date]?.completed || 0 }} {{ currentLanguage === 'en' ? 'Completed' : '已完成' }}</li>
             </ul>
           </div>
         </div>
