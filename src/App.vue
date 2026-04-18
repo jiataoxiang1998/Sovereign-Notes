@@ -16,15 +16,15 @@
       <nav class="flex-1 space-y-2">
         <a @click="currentView = 'dashboard'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'dashboard'}">
           <span class="material-symbols-outlined">dashboard</span>
-          <span>{{ currentLanguage === 'en' ? 'Dashboard' : '仪表盘' }}</span>
+          <span>{{ t('nav.dashboard') }}</span>
         </a>
         <a @click="currentView = 'history'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'history'}">
           <span class="material-symbols-outlined">history</span>
-          <span>{{ currentLanguage === 'en' ? 'History' : '历史' }}</span>
+          <span>{{ t('nav.history') }}</span>
         </a>
         <a @click="currentView = 'chat'" class="flex items-center gap-4 py-3 hover:bg-[#201F1F] hover:text-[#F2CA50] transition-colors scale-95 duration-200 text-[#d0c5af] pl-4 font-['Manrope'] cursor-pointer" :class="{'text-[#D4AF37] font-bold border-l-2 border-[#D4AF37]': currentView === 'chat'}">
           <span class="material-symbols-outlined">chat</span>
-          <span>{{ currentLanguage === 'en' ? 'Chat' : '聊天' }}</span>
+          <span>{{ t('nav.chat') }}</span>
         </a>
       </nav>
     </aside>
@@ -38,7 +38,7 @@
         </div>
         <div class="flex items-center gap-3" style="-webkit-app-region: no-drag;">
           <button @click="toggleLanguage" class="text-xs px-2 py-1 rounded bg-[#2a2a2a] text-[#d0c5af] hover:bg-[#3a3939] transition border border-[#99907c]/30">
-            {{ currentLanguage === 'en' ? '中文' : 'EN' }}
+            {{ t('lang.toggle') }}
           </button>
           <button @click="minimize" class="w-10 h-8 flex items-center justify-center hover:bg-[#2a2a2a] rounded transition" title="Minimize">
             <svg class="w-4 h-4 text-[#d0c5af]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
@@ -46,7 +46,7 @@
           <button @click="maximize" class="w-10 h-8 flex items-center justify-center hover:bg-[#2a2a2a] rounded transition" title="Maximize">
             <svg class="w-4 h-4 text-[#d0c5af]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5 5m11 1l-5-5m-4 0h4m-4 0l-5-5"/></svg>
           </button>
-          <button @click="close" class="w-10 h-8 flex items-center justify-center hover:bg-[#93000a] rounded transition" title="{{ currentLanguage === 'en' ? 'Close' : '关闭' }}">
+          <button @click="close" class="w-10 h-8 flex items-center justify-center hover:bg-[#93000a] rounded transition" title="{{ t('nav.close') }}">
             <svg class="w-4 h-4 text-[#d0c5af] hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -186,21 +186,21 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-[#0D0D0D]/80 flex items-center justify-center z-50" @click.self="showAddModal = false">
       <div class="bg-[#201f1f] rounded-xl border border-[#f2ca50] p-6 w-96">
         <h3 class="text-lg font-bold mb-4 text-[#f2ca50] font-['Manrope']">
-          {{ addType === 'todos' ? (currentLanguage === 'en' ? 'Add To-do' : '添加待办') : addType === 'completed' ? (currentLanguage === 'en' ? 'Add Completed' : '添加已完成') : addType === 'issues' ? (currentLanguage === 'en' ? 'Add Issue' : '添加问题') : (currentLanguage === 'en' ? 'Add Blocker' : '添加阻塞') }}
+          {{ addType === 'todos' ? t('modal.add.todo') : addType === 'completed' ? t('modal.add.completed') : addType === 'issues' ? t('modal.add.issue') : t('modal.add.blocker') }}
         </h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Title' : '标题' }}</label>
-            <input v-model="addTitle" type="text" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border-none outline-none focus:ring-1 focus:ring-[#f2ca50]" :placeholder="currentLanguage === 'en' ? 'Enter title...' : '输入标题...'" @keyup.enter="submitAdd"/>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.title') }}</label>
+            <input v-model="addTitle" type="text" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border-none outline-none focus:ring-1 focus:ring-[#f2ca50]" :placeholder="t('modal.title.placeholder')" @keyup.enter="submitAdd"/>
           </div>
           <div v-if="addType === 'todos'">
-            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Priority' : '优先级' }}</label>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.priority') }}</label>
             <div class="flex gap-2">
               <button v-for="p in priorities" :key="p.value" @click="addPriority = p.value" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === p.value ? `bg-${p.color}/20 border-${p.color} text-${p.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ p.label }}</button>
             </div>
           </div>
           <div v-if="addType === 'todos'" class="relative">
-            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Due Date (Optional)' : '截止日期（可选）' }}</label>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.dueDate') }}</label>
             <button @click="toggleAddPicker" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#f2ca50]/30 text-left hover:border-[#f2ca50] transition">
               {{ addDueDate || 'Click to select date...' }}
             </button>
@@ -211,31 +211,31 @@
                 <button @click.stop="changeAddPickerMonth(1)" class="text-[#d0c5af] hover:text-[#f2ca50] font-bold">›</button>
               </div>
               <div class="grid grid-cols-7 gap-1 mb-1">
-                <span v-for="w in (currentLanguage === 'en' ? ['S','M','T','W','T','F','S'] : ['日','一','二','三','四','五','六'])" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
+                <span v-for="w in t('modal.weekdays').split(',')" :key="w" class="text-[9px] text-[#99907c] text-center">{{ w }}</span>
               </div>
               <div class="grid grid-cols-7 gap-1">
                 <button v-for="d in addPickerDays" :key="d.date" @click.stop="addDueDate = d.date; showAddPicker = false" :disabled="!d.valid" class="text-xs py-1 rounded transition" :class="[d.valid ? 'text-[#e5e2e1] hover:bg-[#3a3939]' : 'text-[#99907c]/30', d.isCurrent ? 'bg-[#f2ca50] text-[#3c2f00]' : '']">{{ d.day }}</button>
               </div>
-              <button @click.stop="addDueDate = ''" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">{{ currentLanguage === 'en' ? 'Clear' : '清除' }}</button>
-              <button @click.stop="showAddPicker = false" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ currentLanguage === 'en' ? 'Close' : '关闭' }}</button>
+              <button @click.stop="addDueDate = ''" class="mt-2 w-full text-xs text-[#ffb4ab] hover:bg-[#93000a]/20 py-1 rounded">{{ t('modal.clear') }}</button>
+              <button @click.stop="showAddPicker = false" class="mt-1 w-full text-xs text-[#d0c5af] hover:bg-[#3a3939] py-1 rounded">{{ t('modal.close') }}</button>
             </div>
           </div>
           <div v-if="addType === 'todos' || addType === 'completed' || addType === 'issues'">
-            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Category (Optional)' : '类别（可选）' }}</label>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.category') }}</label>
             <select v-model="addCategoryId" class="w-full bg-[#353534] text-[#e5e2e1] px-3 py-2 rounded-lg border border-[#99907c]/30 focus:border-[#f2ca50] outline-none">
-              <option value="">{{ currentLanguage === 'en' ? 'No category' : '不选择类别' }}</option>
+              <option value="">{{ t('modal.noCategory') }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
           </div>
           <div v-if="addType === 'issues'">
-            <label class="block text-sm text-[#d0c5af] mb-1">{{ currentLanguage === 'en' ? 'Severity' : '严重程度' }}</label>
+            <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.severity') }}</label>
             <div class="flex gap-2">
               <button v-for="s in severities" :key="s.value" @click="addSeverity = s.value" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === s.value ? `bg-${s.color}/20 border-${s.color} text-${s.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ s.label }}</button>
             </div>
           </div>
         </div>
         <div class="flex gap-2 mt-6">
-          <button @click="showAddModal = false" class="flex-1 py-2 border border-[#99907c] text-[#d0c5af] rounded-lg hover:border-[#f2ca50] transition">{{ currentLanguage === 'en' ? 'Cancel' : '取消' }}</button>
+          <button @click="showAddModal = false" class="flex-1 py-2 border border-[#99907c] text-[#d0c5af] rounded-lg hover:border-[#f2ca50] transition">{{ t('modal.cancel') }}</button>
           <button @click="submitAdd" class="flex-1 py-2 bg-[#f2ca50] text-[#3c2f00] font-bold rounded-lg hover:brightness-110 transition">{{ currentLanguage === 'en' ? 'Add' : '添加' }}</button>
         </div>
       </div>
@@ -247,7 +247,7 @@
         <div class="flex justify-between items-start mb-6">
           <div>
             <span class="text-xs uppercase tracking-widest text-[#f2ca50] font-bold">{{ formatDateFull(historyModalData.date) }}</span>
-            <h3 class="text-2xl font-bold font-['Manrope'] mt-1">{{ currentLanguage === 'en' ? 'Daily Summary' : '每日总结' }}{{ currentLanguage === 'en' ? ' (Read-only)' : '（只读）' }}</h3>
+            <h3 class="text-2xl font-bold font-['Manrope'] mt-1">{{ t('dashboard.title') }}{{ currentLanguage === 'en' ? ' (Read-only)' : '（只读）' }}</h3>
           </div>
           <button @click="showHistoryModalFlag = false" class="material-symbols-outlined text-[#d0c5af] hover:text-[#f2ca50]">close</button>
         </div>
