@@ -204,7 +204,7 @@
           <div v-if="addType === 'todos'">
             <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.priority') }}</label>
             <div class="flex gap-2">
-              <button v-for="p in priorities" :key="p.value" @click="addPriority = p.value" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === p.value ? `bg-${p.color}/20 border-${p.color} text-${p.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ p.label }}</button>
+              <button @click="addPriority = 'high'" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === 'high' ? 'bg-[#ffb4ab]/20 border-[#ffb4ab] text-[#ffb4ab]' : 'border-[#99907c] text-[#d0c5af]'">高</button><button @click="addPriority = 'mid'" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === 'mid' ? 'bg-[#ffb84d]/20 border-[#ffb84d] text-[#ffb84d]' : 'border-[#99907c] text-[#d0c5af]'">中</button><button @click="addPriority = 'low'" class="flex-1 py-2 rounded-lg border transition" :class="addPriority === 'low' ? 'bg-[#4ade80]/20 border-[#4ade80] text-[#4ade80]' : 'border-[#99907c] text-[#d0c5af]'">低</button>
             </div>
           </div>
           <div v-if="addType === 'todos'" class="relative">
@@ -238,7 +238,7 @@
           <div v-if="addType === 'issues'">
             <label class="block text-sm text-[#d0c5af] mb-1">{{ t('modal.severity') }}</label>
             <div class="flex gap-2">
-              <button v-for="s in severities" :key="s.value" @click="addSeverity = s.value" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === s.value ? `bg-${s.color}/20 border-${s.color} text-${s.color}` : 'border-[#99907c] text-[#d0c5af]'">{{ s.label }}</button>
+              <button @click="addSeverity = 'high'" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === 'high' ? 'bg-[#ffb4ab]/20 border-[#ffb4ab] text-[#ffb4ab]' : 'border-[#99907c] text-[#d0c5af]'">严重</button><button @click="addSeverity = 'mid'" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === 'mid' ? 'bg-[#ffb84d]/20 border-[#ffb84d] text-[#ffb84d]' : 'border-[#99907c] text-[#d0c5af]'">一般</button><button @click="addSeverity = 'low'" class="flex-1 py-2 rounded-lg border transition" :class="addSeverity === 'low' ? 'bg-[#ffe066]/20 border-[#ffe066] text-[#ffe066]' : 'border-[#99907c] text-[#d0c5af]'">轻微</button>
             </div>
           </div>
         </div>

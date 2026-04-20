@@ -68,6 +68,23 @@ const translations: Record<string, Record<Language, string>> = {
   'nav.chat': { en: 'Chat', zh: '聊天' },
   'lang.toggle': { en: '中文', zh: 'EN' },
   'nav.close': { en: 'Close', zh: '关闭' },
+
+  // Modal
+  'modal.add.todo': { en: 'Add To-do', zh: '添加待办' },
+  'modal.add.completed': { en: 'Add Completed', zh: '添加已完成' },
+  'modal.add.issue': { en: 'Add Issue', zh: '添加问题' },
+  'modal.add.blocker': { en: 'Add Blocker', zh: '添加阻塞' },
+  'modal.title': { en: 'Title', zh: '标题' },
+  'modal.title.placeholder': { en: 'Enter title...', zh: '输入标题...' },
+  'modal.priority': { en: 'Priority', zh: '优先级' },
+  'modal.dueDate': { en: 'Due Date', zh: '截止日期' },
+  'modal.weekdays': { en: 'S,M,T,W,T,F,S,S', zh: '日,一,二,三,四,五,六' },
+  'modal.clear': { en: 'Clear', zh: '清除' },
+  'modal.close': { en: 'Close', zh: '关闭' },
+  'modal.category': { en: 'Category', zh: '类别' },
+  'modal.noCategory': { en: 'No category', zh: '不选择类别' },
+  'modal.severity': { en: 'Severity', zh: '严重程度' },
+  'modal.cancel': { en: 'Cancel', zh: '取消' },
 }
 
 const currentLanguage = ref<Language>((localStorage.getItem('language') as Language) || 'en')
