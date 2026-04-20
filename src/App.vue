@@ -875,6 +875,10 @@ function loadDate(date: string) {
 function refreshIfNewDay() {
   const today = new Date().toISOString().split('T')[0]
   if (currentDate.value !== today) {
+    const todayData = localStorage.getItem(today)
+    if (!todayData) {
+      carryOverFromYesterday(today)
+    }
     loadDate(today)
     const keys = Object.keys(localStorage)
     dates.value = keys.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse()
