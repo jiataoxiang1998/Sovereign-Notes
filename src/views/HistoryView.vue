@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import type { DayData, Category } from '../types'
 
-defineProps<{
+const props = defineProps<{
   currentLanguage: string
   copySuccess: boolean
   dates: string[]
@@ -24,6 +25,24 @@ const emit = defineEmits<{
   (e: 'exportData'): void
   (e: 'importData', event: Event): void
 }>()
+
+const currentPage = ref(1)
+const pageSize = 4
+
+const totalPages = computed(() => Math.ceil(props.filteredDates.length / pageSize))
+
+const paginatedDates = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return props.filteredDates.slice(start, start + pageSize)
+})
+
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
 
 function formatDateFull(date: string) {
   const d = new Date(date)
@@ -84,7 +103,7 @@ function getItemCount(date: string) {
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
     <div class="lg:col-span-8 space-y-6">
-      <article v-for="date in filteredDates.slice(0, 5)" :key="date" class="bg-[#201f1f] p-8 rounded-xl border border-[rgba(153,144,124,0.2)] relative overflow-hidden group cursor-pointer" @click="emit('showHistoryModal', date)">
+      <article v-for="date in paginatedDates" :key="date" class="bg-[#201f1f] p-8 rounded-xl border border-[rgba(153,144,124,0.2)] relative overflow-hidden group cursor-pointer" @click="emit('showHistoryModal', date)">
         <div class="absolute top-0 left-0 w-1 h-full bg-[#f2ca50] opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="flex justify-between items-start mb-4">
           <div>
@@ -107,6 +126,16 @@ function getItemCount(date: string) {
           </div>
         </div>
       </article>
+
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-4">
+        <button @click="prevPage" :disabled="currentPage === 1" class="px-4 py-2 rounded-lg border border-[#99907c]/40 text-[#d0c5af] disabled:opacity-30 hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span class="text-sm text-[#d0c5af]">{{ currentPage }} / {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 rounded-lg border border-[#99907c]/40 text-[#d0c5af] disabled:opacity-30 hover:border-[#f2ca50] hover:text-[#f2ca50] transition-all">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
     </div>
 
     <div class="lg:col-span-4 space-y-8">

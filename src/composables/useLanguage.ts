@@ -69,6 +69,30 @@ const translations: Record<string, Record<Language, string>> = {
   'lang.toggle': { en: '中文', zh: 'EN' },
   'nav.close': { en: 'Close', zh: '关闭' },
 
+  // Dashboard
+  'dashboard.title': { en: 'Daily Summary', zh: '每日总结' },
+  'dashboard.readonly': { en: '(Read-only)', zh: '（只读）' },
+
+  // History
+  'history.title': { en: 'Historical Archives', zh: '历史档案' },
+  'history.subtitle': { en: 'Review your journey of productivity. Every summary is a testament to your discipline.', zh: '回顾您的生产力历程。每份总结都是您自律的见证。' },
+  'history.importHelp': { en: 'Import Help', zh: '导入帮助' },
+  'history.categoryManagement': { en: 'Category Management', zh: '类别管理' },
+  'history.exportData': { en: 'Export Data', zh: '导出数据' },
+  'history.importData': { en: 'Import Data', zh: '导入数据' },
+  'history.timeframe': { en: 'Timeframe', zh: '时间范围' },
+  'history.allTime': { en: 'All Time', zh: '全部' },
+  'history.thisMonth': { en: 'This Month', zh: '本月' },
+  'history.last7Days': { en: 'Last 7 Days', zh: '最近7天' },
+  'history.summary': { en: 'Summary', zh: '摘要' },
+  'history.tasks': { en: 'Tasks', zh: '任务' },
+  'history.completed': { en: 'Completed', zh: '已完成' },
+  'history.monthlyStats': { en: 'Monthly Stats', zh: '月度统计' },
+  'history.days': { en: 'days', zh: '天' },
+  'history.totalEntries': { en: 'Total Entries', zh: '总记录数' },
+  'history.copySummary': { en: 'Copy Summary', zh: '复制摘要' },
+  'history.copied': { en: 'Copied', zh: '复制成功' },
+
   // Modal
   'modal.add.todo': { en: 'Add To-do', zh: '添加待办' },
   'modal.add.completed': { en: 'Add Completed', zh: '添加已完成' },

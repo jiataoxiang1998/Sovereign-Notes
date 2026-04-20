@@ -551,13 +551,15 @@ const timeframe = ref('all')
 const filteredDates = computed(() => {
   const now = new Date()
   const today = now.toISOString().split('T')[0]
+  const [year, month] = displayMonth.value.split('-').map(Number)
+  const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
+  const monthEnd = new Date(year, month, 0).toISOString().split('T')[0]
   
   if (timeframe.value === 'week') {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     return dates.value.filter(d => d >= weekAgo && d <= today)
   } else if (timeframe.value === 'month') {
-    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-    return dates.value.filter(d => d >= monthStart && d <= today)
+    return dates.value.filter(d => d >= monthStart && d <= monthEnd)
   }
   return dates.value
 })
