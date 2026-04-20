@@ -26,7 +26,16 @@
         </div>
       </div>
     </nav>
-    <div class="p-4">
+    <div class="p-4 space-y-2">
+      <button 
+        @click="$emit('copyFromLast')"
+        class="w-full py-2 border border-[#99907c]/30 text-[#d0c5af] text-xs font-bold rounded-lg flex items-center justify-center gap-2 hover:border-[#f2ca50] hover:text-[#f2ca50] transition"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+        </svg>
+        {{ currentLanguage === 'en' ? 'Copy from Last' : '从上次复制' }}
+      </button>
       <button 
         @click="$emit('newEntry')"
         class="w-full py-3 bg-gold text-bg font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-goldBright transition"
@@ -41,13 +50,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
-defineProps<{ activeDate: string }>()
-defineEmits<{ (e: 'selectDate', date: string): void; (e: 'newEntry'): void }>()
+const props = defineProps<{ activeDate: string }>()
+const emit = defineEmits<{ (e: 'selectDate', date: string): void; (e: 'newEntry'): void; (e: 'copyFromLast'): void }>()
 
 const showHistory = ref(true)
 const dates = ref<string[]>([])
+const currentLanguage = computed(() => localStorage.getItem('language') || 'en')
 
 onMounted(() => {
   const keys = Object.keys(localStorage)

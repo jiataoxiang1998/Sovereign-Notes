@@ -27,6 +27,14 @@
           <span>{{ t('nav.chat') }}</span>
         </a>
       </nav>
+      <div class="px-4 pb-4 space-y-2">
+        <button @click="copyFromLast" class="w-full py-2 border border-[#99907c]/30 text-[#d0c5af] text-xs font-bold rounded-lg flex items-center justify-center gap-2 hover:border-[#f2ca50] hover:text-[#f2ca50] transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+          </svg>
+          {{ currentLanguage === 'en' ? 'Copy from Last' : '从上次复制' }}
+        </button>
+      </div>
     </aside>
 
     <!-- Main Workspace -->
@@ -877,6 +885,11 @@ function refreshIfNewDay() {
   if (currentDate.value !== today) {
     const todayData = localStorage.getItem(today)
     if (!todayData) {
+      data.date = today
+      data.todos = []
+      data.completed = []
+      data.issues = []
+      data.blockers = []
       carryOverFromYesterday(today)
     }
     loadDate(today)
@@ -886,27 +899,32 @@ function refreshIfNewDay() {
   }
 }
 
+function getLastRecordedDate(beforeDate: string): string | null {
+  const keys = Object.keys(localStorage).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+  const sortedDates = keys.sort().reverse()
+  return sortedDates.find(d => d < beforeDate) || null
+}
+
 function carryOverFromYesterday(date: string) {
-  const yesterday = new Date(date)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const yStr = yesterday.toISOString().split('T')[0]
-  const yData = localStorage.getItem(yStr)
-  if (!yData) return
-  const y = JSON.parse(yData)
-  if (y.todos?.length) {
-    y.todos.forEach((t: Item) => {
+  const lastDate = getLastRecordedDate(date)
+  if (!lastDate) return
+  const lastData = localStorage.getItem(lastDate)
+  if (!lastData) return
+  const last = JSON.parse(lastData)
+  if (last.todos?.length) {
+    last.todos.forEach((t: Item) => {
       const item: Item = { ...t, id: crypto.randomUUID(), createdAt: new Date().toISOString(), sourceType: 'todos' }
       data.todos.push(item)
     })
   }
-  if (y.issues?.length) {
-    y.issues.forEach((i: Item) => {
+  if (last.issues?.length) {
+    last.issues.forEach((i: Item) => {
       const item: Item = { ...i, id: crypto.randomUUID(), createdAt: new Date().toISOString(), sourceType: 'issues' }
       data.issues.push(item)
     })
   }
-  if (y.blockers?.length) {
-    y.blockers.forEach((b: Item) => {
+  if (last.blockers?.length) {
+    last.blockers.forEach((b: Item) => {
       const item: Item = { ...b, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
       data.blockers.push(item)
     })
@@ -918,6 +936,17 @@ function carryOverFromYesterday(date: string) {
 
 function saveData() {
   localStorage.setItem(currentDate.value, JSON.stringify(data))
+}
+
+function copyFromLast() {
+  const today = new Date().toISOString().split('T')[0]
+  data.date = today
+  data.todos = []
+  data.completed = []
+  data.issues = []
+  data.blockers = []
+  carryOverFromYesterday(today)
+  loadDate(today)
 }
 
 function selectDate(date: string) { 
